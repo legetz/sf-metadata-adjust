@@ -1,0 +1,55 @@
+{
+  "name": "sf-metadata-adjust", 
+  "version": "1.0.0",
+  "main": "dist/xml-adjuster.js",
+  "bin": {
+    "xml-adjuster": "./dist/xml-adjuster.js"
+  },
+  "oclif": {
+    "bin": "sf",
+    "dirname": "sf", 
+    "commands": "./dist/commands",
+    "topicSeparator": " ",
+    "topics": {
+      "metadata": {
+        "description": "Commands for Salesforce metadata management"
+      }
+    }
+  },
+  "files": [
+    "/dist",
+    "/messages",
+    "/oclif.manifest.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "sf-adjust": "ts-node src/sf-metadata-adjuster.ts",
+    "sf-adjust:prod": "node dist/sf-metadata-adjuster.js",
+    "sf-metadata-adjust": "ts-node src/commands/metadata/adjust.ts",
+    "plugin:install": "sf plugins install .",
+    "clean": "rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "xml",
+    "sort",
+    "adjuster",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "A tool to adjust SF metadata XML files",
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "@types/xml2js": "^0.4.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@oclif/core": "^4.7.2",
+    "@salesforce/core": "^8.23.3",
+    "@salesforce/kit": "^3.2.4",
+    "@salesforce/sf-plugins-core": "^12.2.5",
+    "xml2js": "^0.6.2"
+  }
+}
