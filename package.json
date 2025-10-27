@@ -1,9 +1,9 @@
 {
   "name": "sf-metadata-adjust", 
   "version": "1.0.0",
-  "main": "dist/xml-adjuster.js",
+  "main": "dist/sf-metadata-adjuster.js",
   "bin": {
-    "xml-adjuster": "./dist/xml-adjuster.js"
+    "sf-metadata-adjuster": "./dist/sf-metadata-adjuster.js"
   },
   "oclif": {
     "bin": "sf",
