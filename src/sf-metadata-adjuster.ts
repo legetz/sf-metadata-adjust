@@ -3,6 +3,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
+import * as crypto from 'crypto';
 
 interface XmlObject {
     [key: string]: any;
@@ -296,7 +297,14 @@ class SfMetadataAdjuster {
             headless: false
         });
 
-        return builder.buildObject(obj);
+        let xmlOutput = builder.buildObject(obj);
+        
+        // Ensure there's an empty line before EOF
+        if (!xmlOutput.endsWith('\n')) {
+            xmlOutput += '\n';
+        }
+        
+        return xmlOutput;
     }
 
     /**
@@ -316,8 +324,12 @@ class SfMetadataAdjuster {
             // Build the XML
             const sortedXml = this.buildXml(sortedObject, filePath);
 
+            // Make sha256 hash of original and sorted XML
+            const originalHash = this.hashString(originalXml);
+            const sortedHash = this.hashString(sortedXml);
+
             // Compare original and sorted to see if changes are needed
-            const needsUpdate = originalXml.trim() !== sortedXml.trim();
+            const needsUpdate = originalHash !== sortedHash;
 
             if (needsUpdate) {
                 // Write back to the same file (replace original)
@@ -339,6 +351,13 @@ class SfMetadataAdjuster {
             this.stats.errors++;
             return false;
         }
+    }
+
+    /**
+     * Hash a string using SHA-256, return string digest
+     */
+    private hashString(input: string): string {
+        return crypto.createHash('sha256').update(input).digest('hex');
     }
 
     /**
