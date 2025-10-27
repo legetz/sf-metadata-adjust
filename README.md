@@ -120,15 +120,18 @@ sf metadata adjust --help
 ### Direct Usage
 
 ```bash
-# Process all *-meta.xml files in a folder (with backup)
+# Process all *-meta.xml files in a folder
 npm run sf-adjust ./force-app/main/default
 
-# Process without creating backup
-npm run sf-adjust ./src/main/default -- --no-backup
+# Process only permissionset
+npm run sf-adjust ./src/main/default -- --include permissionset
 
 # Using compiled version
 npm run build
 npm run sf-adjust:prod ./force-app
+
+# Direct usage example
+npx ts-node src/commands/metadata/adjust.ts ./src/main/default -- --include profile,permissionset --git-depth 10
 ```
 
 ## Exclude Filter
