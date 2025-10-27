@@ -39,23 +39,6 @@ npm install
 npm run build
 ```
 
-## Tools Available
-
-### Salesforce Metadata Adjuster (`sf-metadata-adjuster.ts`)
-- Processes entire folders of Salesforce metadata files
-- Recursively finds all `*-meta.xml` files
-- Sorts PermissionSet `classAccesses` by `apexClass` name
-- Sorts `fieldPermissions` by field name
-- Sorts other metadata arrays appropriately
-- Replaces original files with sorted versions
-
-### Salesforce CLI Plugin (`sf metadata adjust`)
-- Native Salesforce CLI plugin integration
-- Use as `sf metadata adjust` command
-- Same functionality as sf-metadata-adjuster but with SF CLI integration
-- Follows SF CLI conventions and help format
-- Can be installed as a plugin: `sf plugins install .`
-
 ## Usage
 
 ```bash
