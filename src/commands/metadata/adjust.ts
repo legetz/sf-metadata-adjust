@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import * as path from 'path';
 import * as fs from 'fs';
 import { execSync } from 'child_process';
@@ -11,7 +9,7 @@ import { Args } from '@oclif/core';
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('sf-metadata-adjust', 'metadata.adjust');
 
-export class MetadataAdjustCommand extends SfCommand<void> {
+export default class MetadataAdjust extends SfCommand<void> {
   public static readonly description = messages.getMessage('description');
   public static readonly examples = messages.getMessages('examples');
 
@@ -104,7 +102,7 @@ export class MetadataAdjustCommand extends SfCommand<void> {
    * Execute the command
    */
   public async run(): Promise<void> {
-    const { args, flags } = await this.parse(MetadataAdjustCommand);
+    const { args, flags } = await this.parse(MetadataAdjust);
     
     // Priority: path argument > targetDir flag > current directory
     const targetDir = args.path || flags.targetDir || process.cwd();
@@ -158,5 +156,3 @@ export class MetadataAdjustCommand extends SfCommand<void> {
     }
   }
 }
-
-export default MetadataAdjustCommand;

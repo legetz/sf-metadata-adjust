@@ -3,14 +3,14 @@ import { Messages } from '@salesforce/core';
 import { Args } from '@oclif/core';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
-const messages = Messages.loadMessages('sf-metadata-adjust', 'metadata.detect.conflicts');
+const messages = Messages.loadMessages('sf-metadata-adjust', 'metadata.detect.git.conflicts');
 
 export type HelloWorldResult = {
   targetDir: string;
   time: string;
 };
 
-export default class Conflicts extends SfCommand<HelloWorldResult> {
+export default class DetectGitConflicts extends SfCommand<HelloWorldResult> {
   public static readonly description = messages.getMessage('description');
   public static readonly examples = messages.getMessages('examples');
 
@@ -30,7 +30,7 @@ export default class Conflicts extends SfCommand<HelloWorldResult> {
   };
 
   public async run(): Promise<HelloWorldResult> {
-    const { args, flags } = await this.parse(Conflicts);
+    const { args, flags } = await this.parse(DetectGitConflicts);
     
     // Priority: path argument > targetDir flag > current directory
     const targetDir = args.path || flags.targetDir || process.cwd();
