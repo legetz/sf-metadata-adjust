@@ -1,0 +1,33 @@
+# Source files (only include compiled dist/)
+src/
+test-files/
+*.ts
+!*.d.ts
+
+# Development files
+tsconfig.json
+.github/
+.git/
+.gitignore
+
+# Node modules
+node_modules/
+
+# Build artifacts
+*.log
+npm-debug.log*
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+.backup-*/
+*.tgz
