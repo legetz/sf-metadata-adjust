@@ -530,7 +530,7 @@ function main() {
     const args = process.argv.slice(2);
     
     if (args.length === 0) {
-        console.error('Usage: sf-metadata-adjuster <folder-path> [--no-backup]');
+        console.error('Usage: sf-metadata-adjuster <folder-path> [--backup]');
         console.error('');
         console.error('Description:');
         console.error('  Recursively finds and sorts all *-meta.xml files in the specified folder');
@@ -538,16 +538,16 @@ function main() {
         console.error('');
         console.error('Examples:');
         console.error('  sf-metadata-adjuster ./force-app/main/default');
-        console.error('  sf-metadata-adjuster ./src --no-backup');
+        console.error('  sf-metadata-adjuster ./src --backup');
         console.error('  npx ts-node src/sf-metadata-adjuster.ts ./force-app');
         console.error('');
         console.error('Options:');
-        console.error('  --no-backup    Skip creating backup before processing');
+        console.error('  --backup    Activate backup before processing');
         process.exit(1);
     }
 
     const folderPath = args[0];
-    const noBackup = args.includes('--no-backup');
+    const backup = args.includes('--backup');
 
     // Check if folder exists
     if (!fs.existsSync(folderPath)) {
@@ -562,7 +562,7 @@ function main() {
     }
 
     const adjuster = new SfMetadataAdjuster(folderPath);
-    adjuster.process(!noBackup);
+    adjuster.process(backup);
 }
 
 // Run if this file is executed directly

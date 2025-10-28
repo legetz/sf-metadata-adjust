@@ -1,9 +1,9 @@
 {
   "name": "sf-metadata-adjust", 
   "version": "1.0.0",
-  "main": "dist/sf-metadata-adjuster.js",
+  "main": "dist/commands/metadata/adjust.js",
   "bin": {
-    "sf-metadata-adjuster": "./dist/sf-metadata-adjuster.js"
+    "sf-metadata-adjuster": "./dist/commands/metadata/adjust.js"
   },
   "oclif": {
     "bin": "sf",
@@ -31,9 +31,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
+    "salesforce-cli-plugin",
+    "sfdx-plugin",
     "xml",
-    "sort",
-    "adjuster",
+    "salesforce",
     "typescript"
   ],
   "author": "",

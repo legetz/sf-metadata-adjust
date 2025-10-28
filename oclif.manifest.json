@@ -10,8 +10,8 @@
       "examples": [
         "sf metadata adjust",
         "sf metadata adjust ./force-app/main/default",
-        "sf metadata adjust --no-backup",
-        "sf metadata adjust ./src/main/default --no-backup"
+        "sf metadata adjust --backup",
+        "sf metadata adjust ./src/main/default --backup"
       ],
       "flags": {
         "target-dir": {
@@ -23,11 +23,11 @@
           "required": false,
           "default": "."
         },
-        "no-backup": {
-          "name": "no-backup", 
+        "backup": {
+          "name": "backup", 
           "type": "boolean",
-          "summary": "Skip creating backup before processing",
-          "description": "When specified, the command will not create a backup directory before processing files.",
+          "summary": "Create metadata backups before processing",
+          "description": "When specified, the command will create a backup directory before processing files.",
           "allowNo": false,
           "default": false
         }
