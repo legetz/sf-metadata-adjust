@@ -87,4 +87,12 @@
 <viewAllFields>false</viewAllFields>
 <viewAllRecords>true</viewAllRecords>
 </objectPermissions>
+    <userPermissions>
+        <enabled>true</enabled>
+        <name>SubscribeReportToOtherUsers</name>
+    </userPermissions>
+    <userPermissions>
+        <enabled>true</enabled>
+        <name>SubscribeReportsRunAsUser</name>
+    </userPermissions>
 </PermissionSet>
