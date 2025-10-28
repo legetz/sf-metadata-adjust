@@ -5,8 +5,11 @@ Can optionally process only files changed in recent Git commits.
 
 Backups are disabled by default for CI/CD friendliness.
 
+# args.path.description
+Path to the directory containing metadata files. Defaults to current directory if not specified.
+
 # flags.targetDir.description
-Directory containing Salesforce project files. Defaults to current directory.
+Directory containing Salesforce project files. Defaults to current directory. Alternative to using the path argument.
 
 # flags.backup.description
 Create backup files before modifying metadata. Backups are disabled by default for CI/CD friendliness.

@@ -6,6 +6,7 @@ import { execSync } from 'child_process';
 import { SfMetadataAdjuster } from '../../sf-metadata-adjuster.js';
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
 import { Messages } from '@salesforce/core';
+import { Args } from '@oclif/core';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('sf-metadata-adjust', 'metadata.adjust');
@@ -14,11 +15,17 @@ export class MetadataAdjustCommand extends SfCommand<void> {
   public static readonly description = messages.getMessage('description');
   public static readonly examples = messages.getMessages('examples');
 
+  public static readonly args = {
+    path: Args.string({
+      description: messages.getMessage('args.path.description'),
+      required: false,
+    }),
+  };
+
   public static readonly flags = {
     targetDir: Flags.string({
       char: 'd',
       description: messages.getMessage('flags.targetDir.description'),
-      default: '.',
     }),
     backup: Flags.boolean({
       description: messages.getMessage('flags.backup.description'),
@@ -97,8 +104,10 @@ export class MetadataAdjustCommand extends SfCommand<void> {
    * Execute the command
    */
   public async run(): Promise<void> {
-    const { flags } = await this.parse(MetadataAdjustCommand);
-    const targetDir = flags.targetDir || process.cwd();
+    const { args, flags } = await this.parse(MetadataAdjustCommand);
+    
+    // Priority: path argument > targetDir flag > current directory
+    const targetDir = args.path || flags.targetDir || process.cwd();
     
     // Start timer
     const startTime = Date.now();

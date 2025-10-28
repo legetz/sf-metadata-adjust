@@ -1,6 +1,9 @@
 # description
 Detect GIT conflict markers in the specified directory
 
+# args.path.description
+Path to the directory containing Salesforce project files. Defaults to current directory if not specified.
+
 # flags.target-dir.description
 Directory containing Salesforce project files. Defaults to current directory.
 
