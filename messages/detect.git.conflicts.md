@@ -13,7 +13,3 @@ Directory containing Salesforce project files. Defaults to current directory.
 
 - Check GIT conflict files within given folder:
   <%= config.bin %> <%= command.id %> ./force-app/main/default
-
-# info.hello
-
-Hello %s at %s.

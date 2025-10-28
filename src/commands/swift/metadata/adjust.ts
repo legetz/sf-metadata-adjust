@@ -1,13 +1,13 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { execSync } from 'child_process';
-import { SfMetadataAdjuster } from '../../sf-metadata-adjuster.js';
+import { SfMetadataAdjuster } from '../../../sf-metadata-adjuster.js';
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
 import { Messages } from '@salesforce/core';
 import { Args } from '@oclif/core';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
-const messages = Messages.loadMessages('sf-metadata-adjust', 'metadata.adjust');
+const messages = Messages.loadMessages('sf-swift', 'metadata.adjust');
 
 export default class MetadataAdjust extends SfCommand<void> {
   public static readonly description = messages.getMessage('description');

@@ -1,12 +1,11 @@
 {
-  "name": "sf-metadata-adjust",
+  "name": "sf-swift",
   "version": "1.0.0",
   "main": "dist/index.js",
   "type": "module",
   "exports": "./dist/index.js",
   "oclif": {
     "bin": "sf",
-    "dirname": "sf",
     "commands": "./dist/commands",
     "topicSeparator": " ",
     "topics": {
@@ -17,10 +16,10 @@
   },
   "files": [
     "/dist",
-    "/messages",
-    "/oclif.manifest.json"
+    "/messages"
   ],
   "scripts": {
+    "make": "npm run clean && npm run build",
     "build": "tsc",
     "prepack": "npm run build",
     "sf-adjust": "ts-node src/sf-metadata-adjuster.ts",
@@ -32,21 +31,24 @@
   },
   "keywords": [
     "salesforce-cli-plugin",
-    "sfdx-plugin",
-    "xml",
+    "salesforce-cli",
     "salesforce",
+    "sfdx",
+    "sfdx-plugin",
+    "oclif",
+    "xml",
     "typescript"
   ],
   "author": "",
   "license": "ISC",
-  "description": "A Salesforce CLI plugin that formats and sorts XML metadata files alphabetically with smart handling of PermissionSets, Profiles, and other metadata types",
-  "homepage": "https://github.com/legetz/sf-metadata-adjust#readme",
+  "description": "A fast and powerful Salesforce CLI plugin with utilities for metadata formatting, sorting, and more",
+  "homepage": "https://github.com/legetz/sf-swift#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/legetz/sf-metadata-adjust.git"
+    "url": "git+https://github.com/legetz/sf-swift.git"
   },
   "bugs": {
-    "url": "https://github.com/legetz/sf-metadata-adjust/issues"
+    "url": "https://github.com/legetz/sf-swift/issues"
   },
   "devDependencies": {
     "@salesforce/dev-scripts": "^11.0.4",

@@ -1,6 +1,6 @@
-# Salesforce Metadata Adjust
+# SF Swift ⚡
 
-A Salesforce CLI plugin that formats XML files and sorts their elements alphabetically (a-z)
+A fast and powerful Salesforce CLI plugin with utilities for metadata formatting, sorting, and more
 
 - 🎯 **Smart Salesforce Metadata Sorting** - Understands PermissionSet, Profile, and other metadata structures
 - 💾 **Automatic Backups** - Creates timestamped backups before processing (opt-in)
@@ -16,12 +16,25 @@ A Salesforce CLI plugin that formats XML files and sorts their elements alphabet
 
 ## Installation
 
-### As a Salesforce CLI Plugin
+### Salesforce CLI Plugin
 
 ```bash
 # Install from npm
-sf plugins install sf-metadata-adjust
+sf plugins install sf-swift
+```
 
+### Standalone Tool
+
+```bash
+# Clone and install
+git clone git@github.com:legetz/sf-swift.git
+cd sf-swift
+npm install
+npm run build
+```
+
+Optionally connect to SF CLI:
+```bash
 # Install from local directory (for development)
 sf plugins install .
 
@@ -29,51 +42,41 @@ sf plugins install .
 sf plugins link .
 ```
 
-### As a Standalone Tool
-
-```bash
-# Clone and install
-git clone git@github.com:legetz/sf-metadata-adjust.git
-cd sf-metadata-adjust
-npm install
-npm run build
-```
-
 ## Usage
 
 ```bash
 # Process current directory
-sf metadata adjust
+sf swift metadata adjust
 
 # Process specific directory  
-sf metadata adjust ./force-app/main/default
+sf swift metadata adjust ./force-app/main/default
 
 # Process with backup (disabled by default)
-sf metadata adjust --backup
+sf swift metadata adjust --backup
 
 # Process only files changed in last 3 commits
-sf metadata adjust --git-depth 3
+sf swift metadata adjust --git-depth 3
 
 # Process only files changed in last 5 commits with backup
-sf metadata adjust --git-depth 5 --backup
+sf swift metadata adjust --git-depth 5 --backup
 
 # Process only PermissionSet files
-sf metadata adjust --include permissionset
+sf swift metadata adjust --include permissionset
 
 # Process only PermissionSet and Profile files
-sf metadata adjust --include permissionset,profile
+sf swift metadata adjust --include permissionset,profile
 
 # Combine with git-depth to process only specific types from recent commits
-sf metadata adjust --git-depth 3 --include permissionset
+sf swift metadata adjust --git-depth 3 --include permissionset
 
 # Exclude specific types (overrides defaults)
-sf metadata adjust --exclude profile,permissionset
+sf swift metadata adjust --exclude profile,permissionset
 
 # Include with custom exclusions
-sf metadata adjust --include permissionset,field --exclude profile
+sf swift metadata adjust --include permissionset,field --exclude profile
 
 # Get help
-sf metadata adjust --help
+sf swift metadata adjust --help
 ```
 
 ### Arguments
@@ -146,13 +149,13 @@ You can override these defaults with the `--exclude` flag:
 
 ```bash
 # Only exclude profiles (process everything else including layouts, flexipages, etc.)
-sf metadata adjust --exclude profile
+sf swift metadata adjust --exclude profile
 
 # Exclude nothing (process all files)
-sf metadata adjust --exclude ""
+sf swift metadata adjust --exclude ""
 
 # Custom exclusions
-sf metadata adjust --exclude reportType,customObject
+sf swift metadata adjust --exclude reportType,customObject
 ```
 
 These files are counted in the summary statistics but never modified.
@@ -169,7 +172,7 @@ These files are counted in the summary statistics but never modified.
 ### Pre-commit Hook
 ```bash
 #!/bin/bash
-sf metadata adjust --git-depth 1
+sf swift metadata adjust --git-depth 1
 if [ $? -ne 0 ]; then
     echo "Metadata formatting failed!"
     exit 1
@@ -179,7 +182,7 @@ fi
 ### GitHub Actions
 ```yaml
 - name: Format Metadata
-  run: sf metadata adjust --git-depth 10
+  run: sf swift metadata adjust --git-depth 10
 ```
 
 ## Troubleshooting

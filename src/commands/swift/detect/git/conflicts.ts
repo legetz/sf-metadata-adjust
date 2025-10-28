@@ -3,14 +3,13 @@ import { Messages } from '@salesforce/core';
 import { Args } from '@oclif/core';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
-const messages = Messages.loadMessages('sf-metadata-adjust', 'metadata.detect.git.conflicts');
+const messages = Messages.loadMessages('sf-swift', 'detect.git.conflicts');
 
-export type HelloWorldResult = {
-  targetDir: string;
-  time: string;
+export type ConflictResult = {
+  count: number;
 };
 
-export default class DetectGitConflicts extends SfCommand<HelloWorldResult> {
+export default class DetectGitConflicts extends SfCommand<ConflictResult> {
   public static readonly description = messages.getMessage('description');
   public static readonly examples = messages.getMessages('examples');
 
@@ -29,17 +28,16 @@ export default class DetectGitConflicts extends SfCommand<HelloWorldResult> {
     }),
   };
 
-  public async run(): Promise<HelloWorldResult> {
+  public async run(): Promise<ConflictResult> {
     const { args, flags } = await this.parse(DetectGitConflicts);
     
     // Priority: path argument > targetDir flag > current directory
     const targetDir = args.path || flags.targetDir || process.cwd();
 
-    const time = new Date().toDateString();
-    this.log(messages.getMessage('info.hello', [targetDir, time]));
+    const conflictCount = 0; // Placeholder for actual conflict detection logic
+    this.log(`Detected ${conflictCount} git conflicts in ${targetDir}`);
     return {
-      targetDir: targetDir,
-      time,
+      count: conflictCount,
     };
   }
 }

@@ -49,10 +49,10 @@ git push origin main --follow-tags
 
 ```bash
 # Check npm registry
-npm view sf-metadata-adjust
+npm view sf-swift
 
 # Test installation
-sf plugins install sf-metadata-adjust
+sf plugins install sf-swift
 ```
 
 ## Manual Release (Emergency Only)

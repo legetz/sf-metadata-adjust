@@ -23,6 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🚀 **GitHub Actions** - Automated publishing to npm on version tag push
 
 ### Features
-- **Command**: `sf metadata adjust` - Main command for sorting metadata files
+- **Command**: `sf swift metadata adjust` - Main command for sorting metadata files
 
-[1.0.0]: https://github.com/legetz/sf-metadata-adjust/releases/tag/v1.0.0
+[1.0.0]: https://github.com/legetz/sf-swift/releases/tag/v1.0.0
