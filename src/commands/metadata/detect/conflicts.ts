@@ -10,14 +10,12 @@ export type HelloWorldResult = {
 };
 
 export default class Conflicts extends SfCommand<HelloWorldResult> {
-  public static readonly summary = messages.getMessage('summary');
   public static readonly description = messages.getMessage('description');
   public static readonly examples = messages.getMessages('examples');
 
   public static readonly flags = {
     targetDir: Flags.string({
       char: 'd',
-      summary: messages.getMessage('flags.target-dir.summary'),
       description: messages.getMessage('flags.target-dir.description'),
       default: '.',
     }),

@@ -11,18 +11,37 @@ Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('sf-metadata-adjust', 'metadata.adjust');
 
 export class MetadataAdjustCommand extends SfCommand<void> {
-  public static readonly summary = messages.getMessage('Summary');
-  public static readonly description = messages.getMessage('Description');
-  public static readonly examples = messages.getMessages('Examples');
+  public static readonly description = messages.getMessage('description');
+  public static readonly examples = messages.getMessages('examples');
 
   public static readonly flags = {
-      targetDir: Flags.string({
-        char: 'd',
-        summary: messages.getMessage('flags.targetDir.summary'),
-        description: messages.getMessage('flags.targetDir.description'),
-        default: '.',
-      }),
-    };
+    targetDir: Flags.string({
+      char: 'd',
+      description: messages.getMessage('flags.targetDir.description'),
+      default: '.',
+    }),
+    backup: Flags.boolean({
+      description: messages.getMessage('flags.backup.description'),
+      default: false,
+    }),
+    gitDepth: Flags.integer({
+      char: 'g',
+      description: messages.getMessage('flags.gitDepth.description'),
+      default: 0,
+    }),
+    include: Flags.string({
+      char: 'i',
+      description: messages.getMessage('flags.include.description'),
+      multiple: true,
+      delimiter: ',',
+    }),
+    exclude: Flags.string({
+      char: 'e',
+      description: messages.getMessage('flags.exclude.description'),
+      multiple: true,
+      delimiter: ',',
+    }),
+  };
 
   /**
    * Get list of *-meta.xml files changed in the last N commits
@@ -79,19 +98,23 @@ export class MetadataAdjustCommand extends SfCommand<void> {
    */
   public async run(): Promise<void> {
     const { flags } = await this.parse(MetadataAdjustCommand);
-    const targetDir = flags.targetDir || flags.path || process.cwd();
+    const targetDir = flags.targetDir || process.cwd();
     
     // Start timer
     const startTime = Date.now();
     
+    // Convert flag values to arrays (handle undefined)
+    const includeTypes = flags.include || [];
+    const excludeTypes = flags.exclude || [];
+    
     // Display include types if specified
-    if (flags.includeTypes.length > 0) {
-      console.log(`\n🎯 Including only: ${flags.includeTypes.join(', ')}`);
+    if (includeTypes.length > 0) {
+      console.log(`\n🎯 Including only: ${includeTypes.join(', ')}`);
     }
     
     // Display exclude types if specified
-    if (flags.excludeTypes.length > 0) {
-      console.log(`\n🚫 Excluding: ${flags.excludeTypes.join(', ')}`);
+    if (excludeTypes.length > 0) {
+      console.log(`\n🚫 Excluding: ${excludeTypes.join(', ')}`);
     }
 
     try {
@@ -108,11 +131,11 @@ export class MetadataAdjustCommand extends SfCommand<void> {
           return;
         }
 
-        const adjuster = new SfMetadataAdjuster(targetDir, flags.includeTypes, flags.excludeTypes);
+        const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes);
         await adjuster.processSpecificFiles(changedFiles, flags.backup);
       } else {
         // Process all files in directory
-        const adjuster = new SfMetadataAdjuster(targetDir, flags.includeTypes, flags.excludeTypes);
+        const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes);
         await adjuster.process(flags.backup);
       }
       
