@@ -200,8 +200,9 @@ ${MetadataAdjustCommand.examples.map(ex => `  ${ex}`).join('\n')}
   }
 }
 
-// CLI entry point when run directly
-if (require.main === module) {
+// CLI entry point when run directly (ES module check)
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   const args = process.argv.slice(2);
   
   if (args.includes('--help') || args.includes('-h')) {
