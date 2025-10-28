@@ -21,7 +21,7 @@ export default class MetadataAdjust extends SfCommand<void> {
   };
 
   public static readonly flags = {
-    targetDir: Flags.string({
+    "target-dir": Flags.string({
       char: 'd',
       description: messages.getMessage('flags.targetDir.description'),
     }),
@@ -29,7 +29,7 @@ export default class MetadataAdjust extends SfCommand<void> {
       description: messages.getMessage('flags.backup.description'),
       default: false,
     }),
-    gitDepth: Flags.integer({
+    "git-depth": Flags.integer({
       char: 'g',
       description: messages.getMessage('flags.gitDepth.description'),
       default: 0,
@@ -105,7 +105,7 @@ export default class MetadataAdjust extends SfCommand<void> {
     const { args, flags } = await this.parse(MetadataAdjust);
     
     // Priority: path argument > targetDir flag > current directory
-    const targetDir = args.path || flags.targetDir || process.cwd();
+    const targetDir = args.path || flags["target-dir"] || process.cwd();
     
     // Start timer
     const startTime = Date.now();
@@ -126,11 +126,11 @@ export default class MetadataAdjust extends SfCommand<void> {
 
     try {
       // If git-depth is specified, process only changed files
-      if (flags.gitDepth > 0) {
-        const changedFiles = this.getChangedMetadataFiles(flags.gitDepth, targetDir);
-        
+      if (flags["git-depth"] > 0) {
+        const changedFiles = this.getChangedMetadataFiles(flags["git-depth"], targetDir);
+
         if (changedFiles.length === 0) {
-          console.log(`\n🔍 No *-meta.xml files found in last ${flags.gitDepth} commits`);
+          console.log(`\n🔍 No *-meta.xml files found in last ${flags["git-depth"]} commits`);
           // Calculate and display elapsed time even for early return
           const endTime = Date.now();
           const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);

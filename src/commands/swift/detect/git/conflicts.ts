@@ -21,7 +21,7 @@ export default class DetectGitConflicts extends SfCommand<ConflictResult> {
     };
 
   public static readonly flags = {
-    targetDir: Flags.string({
+    "target-dir": Flags.string({
       char: 'd',
       description: messages.getMessage('flags.target-dir.description'),
       default: '.',
@@ -32,7 +32,7 @@ export default class DetectGitConflicts extends SfCommand<ConflictResult> {
     const { args, flags } = await this.parse(DetectGitConflicts);
     
     // Priority: path argument > targetDir flag > current directory
-    const targetDir = args.path || flags.targetDir || process.cwd();
+    const targetDir = args.path || flags["target-dir"] || process.cwd();
 
     const conflictCount = 0; // Placeholder for actual conflict detection logic
     this.log(`Detected ${conflictCount} git conflicts in ${targetDir}`);
