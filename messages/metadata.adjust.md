@@ -1,8 +1,18 @@
 # Summary
-summary=Sort and format Salesforce metadata XML files
 
-# Description  
-description=Recursively processes all *-meta.xml files in the specified directory, sorting XML elements alphabetically with special handling for Salesforce metadata structures like PermissionSets, Profiles, and other metadata types. Supports filtering by metadata type and processing only Git-changed files for faster CI/CD workflows.
+Sort and format Salesforce metadata XML files
+
+# Description
+
+Recursively processes all *-meta.xml files in the specified directory, sorting XML elements alphabetically with special handling for Salesforce metadata structures like PermissionSets, Profiles, and other metadata types. Can optionally process only files changed in recent Git commits. Backups are disabled by default for CI/CD friendliness.
+
+# flags.targetDir.summary
+
+Target directory to process
+
+# flags.targetDir.description
+
+Directory containing Salesforce project files. Defaults to current directory.
 
 # Flags
 
