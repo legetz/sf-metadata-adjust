@@ -1,11 +1,8 @@
 {
   "name": "sf-metadata-adjust",
   "version": "1.0.0",
-  "main": "dist/commands/metadata/adjust.js",
   "type": "module",
-  "bin": {
-    "sf-metadata-adjuster": "./dist/commands/metadata/adjust.js"
-  },
+  "exports": "./dist/index.js",
   "oclif": {
     "bin": "sf",
     "dirname": "sf",

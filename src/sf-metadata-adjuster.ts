@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
@@ -19,7 +17,7 @@ interface ProcessingStats {
     unchangedFiles: string[];
 }
 
-class SfMetadataAdjuster {
+export class SfMetadataAdjuster {
     private folderPath: string;
     private includeTypes: string[];
     private excludeTypes: string[];
@@ -526,6 +524,7 @@ class SfMetadataAdjuster {
 /**
  * Command line interface
  */
+/*
 function main() {
     const args = process.argv.slice(2);
     
@@ -566,8 +565,7 @@ function main() {
 }
 
 // Run if this file is executed directly
-if (require.main === module) {
+if (import.meta.url === new URL('.', import.meta.url).href) {
     main();
 }
-
-export default SfMetadataAdjuster;
+*/
