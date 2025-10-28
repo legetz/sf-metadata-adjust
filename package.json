@@ -1,13 +1,14 @@
 {
-  "name": "sf-metadata-adjust", 
+  "name": "sf-metadata-adjust",
   "version": "1.0.0",
   "main": "dist/commands/metadata/adjust.js",
+  "type": "module",
   "bin": {
     "sf-metadata-adjuster": "./dist/commands/metadata/adjust.js"
   },
   "oclif": {
     "bin": "sf",
-    "dirname": "sf", 
+    "dirname": "sf",
     "commands": "./dist/commands",
     "topicSeparator": " ",
     "topics": {
@@ -41,6 +42,7 @@
   "license": "ISC",
   "description": "A tool to adjust SF metadata XML files",
   "devDependencies": {
+    "@salesforce/dev-scripts": "^11.0.4",
     "@types/node": "^24.9.1",
     "@types/xml2js": "^0.4.14",
     "ts-node": "^10.9.2",

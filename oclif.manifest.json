@@ -39,6 +39,35 @@
           "required": false
         }
       }
+    },
+    "metadata:detect:conflicts": {
+      "id": "metadata:detect:conflicts",
+      "pluginName": "sf-metadata-adjust",
+      "pluginType": "core",
+      "summary": "Detect conflicts",
+      "description": "Detect GIT conflict markers in the specified directory",
+      "examples": [
+        "sf metadata detect conflicts",
+        "sf metadata detect conflicts ./force-app/main/default"
+      ],
+      "flags": {
+        "target-dir": {
+          "name": "target-dir",
+          "type": "option",
+          "char": "d",
+          "summary": "Target directory to process",
+          "description": "Directory containing Salesforce project files. Defaults to current directory.",
+          "required": false,
+          "default": "."
+        }
+      },
+      "args": {
+        "path": {
+          "name": "path",
+          "description": "Path to the directory containing metadata files to process",
+          "required": false
+        }
+      }
     }
   }
 }

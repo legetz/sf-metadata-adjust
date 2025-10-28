@@ -3,7 +3,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { execSync } from 'child_process';
-import SfMetadataAdjuster from '../../sf-metadata-adjuster';
+import SfMetadataAdjuster from '../../sf-metadata-adjuster.js';
 
 /**
  * SF CLI Plugin Command: metadata adjust
