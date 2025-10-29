@@ -190,7 +190,13 @@ export class SfMetadataAdjuster {
             explicitChildren: false,
             explicitArray: true, // Keep arrays as arrays for consistent handling
             mergeAttrs: false,
-            explicitRoot: false
+            explicitRoot: false,
+            trim: false, // Don't trim whitespace which might affect entity preservation
+            normalize: false, // Don't normalize whitespace
+            normalizeTags: false, // Don't normalize tag names
+            attrkey: '$', // Use standard attribute key
+            charkey: '_', // Use standard character data key
+            charsAsChildren: false
         });
         
         try {
@@ -223,21 +229,16 @@ export class SfMetadataAdjuster {
                 return fieldA.toLowerCase().localeCompare(fieldB.toLowerCase());
             }
 
-            // For customPermissions, sort by name
-            if (arrayKey === 'customPermissions') {
-                const nameA = a.name?.[0] || '';
-                const nameB = b.name?.[0] || '';
-                return nameA.toLowerCase().localeCompare(nameB.toLowerCase());
-            }
-
             // For other common Salesforce metadata arrays
-            if (arrayKey === 'customMetadataTypeAccesses' || 
+            if (arrayKey === 'customPermissions' ||
+                arrayKey === 'customMetadataTypeAccesses' || 
                 arrayKey === 'externalCredentialPrincipalAccesses' ||
                 arrayKey === 'objectPermissions' ||
                 arrayKey === 'recordTypeVisibilities' ||
-                arrayKey === 'tabVisibilities') {
-                const nameA = a.name?.[0] || a.object?.[0] || a.recordType?.[0] || a.tab?.[0] || '';
-                const nameB = b.name?.[0] || b.object?.[0] || b.recordType?.[0] || b.tab?.[0] || '';
+                arrayKey === 'tabVisibilities' || 
+                arrayKey === 'states') {
+                const nameA = a.name?.[0] || a.object?.[0] || a.recordType?.[0] || a.tab?.[0] || a.isoCode?.[0] || '';
+                const nameB = b.name?.[0] || b.object?.[0] || b.recordType?.[0] || b.tab?.[0] || b.isoCode?.[0] || '';
                 return nameA.toLowerCase().localeCompare(nameB.toLowerCase());
             }
 
@@ -304,6 +305,36 @@ export class SfMetadataAdjuster {
     }
 
     /**
+     * Restore XML entity encoding for special characters
+     * This fixes the issue where &apos; becomes ' during parse/build cycle
+     */
+    private restoreXmlEntities(xmlString: string): string {
+        // Replace literal apostrophes with &apos; entity
+        // Use a more compatible approach without negative lookbehind
+        let result = xmlString;
+        
+        // First, temporarily mark existing entities to avoid double-encoding
+        const entityMarker = '___ENTITY_MARKER___';
+        result = result.replace(/&apos;/g, `${entityMarker}apos;`);
+        result = result.replace(/&quot;/g, `${entityMarker}quot;`);
+        result = result.replace(/&amp;/g, `${entityMarker}amp;`);
+        result = result.replace(/&lt;/g, `${entityMarker}lt;`);
+        result = result.replace(/&gt;/g, `${entityMarker}gt;`);
+        
+        // Now replace literal apostrophes with entities
+        result = result.replace(/'/g, '&apos;');
+        
+        // Restore the original entities
+        result = result.replace(new RegExp(`${entityMarker}apos;`, 'g'), '&apos;');
+        result = result.replace(new RegExp(`${entityMarker}quot;`, 'g'), '&quot;');
+        result = result.replace(new RegExp(`${entityMarker}amp;`, 'g'), '&amp;');
+        result = result.replace(new RegExp(`${entityMarker}lt;`, 'g'), '&lt;');
+        result = result.replace(new RegExp(`${entityMarker}gt;`, 'g'), '&gt;');
+        
+        return result;
+    }
+
+    /**
      * Detect root element type and build appropriate XML
      */
     private buildXml(obj: XmlObject, originalFilePath: string): string {
@@ -345,10 +376,17 @@ export class SfMetadataAdjuster {
                 standalone: undefined
             },
             rootName: rootName,
-            headless: false
+            headless: false,
+            attrkey: '$',
+            charkey: '_',
+            cdata: false,
+            allowSurrogateChars: false
         });
 
         let xmlOutput = builder.buildObject(obj);
+        
+        // Post-process to restore XML entity encoding for apostrophes
+        xmlOutput = this.restoreXmlEntities(xmlOutput);
         
         // Ensure there's an empty line before EOF
         if (!xmlOutput.endsWith('\n')) {
