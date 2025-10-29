@@ -191,7 +191,7 @@ export class SfMetadataAdjuster {
             explicitArray: true, // Keep arrays as arrays for consistent handling
             mergeAttrs: false,
             explicitRoot: false,
-            trim: false, // Don't trim whitespace which might affect entity preservation
+            trim: true,
             normalize: false, // Don't normalize whitespace
             normalizeTags: false, // Don't normalize tag names
             attrkey: '$', // Use standard attribute key
