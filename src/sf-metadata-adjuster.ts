@@ -141,6 +141,10 @@ export class SfMetadataAdjuster {
                 const fullPath = path.join(dir, entry.name);
                 
                 if (entry.isDirectory()) {
+                    // Skip node_modules and .git directories for performance
+                    if (entry.name === 'node_modules' || entry.name === '.git') {
+                        continue;
+                    }
                     // Recursively search subdirectories
                     files.push(...this.findMetadataFiles(fullPath));
                 } else if (entry.isFile() && entry.name.endsWith('-meta.xml')) {
@@ -311,19 +315,23 @@ export class SfMetadataAdjuster {
         if (rootKeys.length > 0) {
             rootName = rootKeys[0];
         }
-        
+
+        const knownRoots = {
+            'AddressSettings': 'Address.settings-meta.xml',
+            'PermissionSet': '.permissionset-meta.xml',
+            'Profile': '.profile-meta.xml',
+            'Flow': '.flow-meta.xml',
+            'Layout': '.layout-meta.xml',
+            'CustomObject': '.customObject-meta.xml',
+            'ApexClass': '.cls-meta.xml',
+            'ApexTrigger': '.trigger-meta.xml'
+        };
+
         // Try to guess from filename
         const filename = path.basename(originalFilePath);
-        if (filename.includes('.permissionset-meta.xml')) {
-            rootName = 'PermissionSet';
-        } else if (filename.includes('.profile-meta.xml')) {
-            rootName = 'Profile';
-        } else if (filename.includes('.flow-meta.xml')) {
-            rootName = 'Flow';
-        } else if (filename.includes('.layout-meta.xml')) {
-            rootName = 'Layout';
-        } else if (filename.includes('.customObject-meta.xml')) {
-            rootName = 'CustomObject';
+        const knownRoot = Object.entries(knownRoots).find(([, v]) => filename.includes(v));
+        if (knownRoot) {
+            rootName = knownRoot[0];
         }
         
         const builder = new xml2js.Builder({
