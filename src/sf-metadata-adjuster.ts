@@ -335,34 +335,31 @@ export class SfMetadataAdjuster {
     }
 
     /**
+     * Extract the root element name directly from the raw XML string
+     * This avoids issues with parser configuration affecting object keys
+     */
+    private extractRootElementName(xmlString: string): string {
+        // Match the first opening tag after XML declaration/comments
+        const rootElementMatch = xmlString.match(/<\s*([a-zA-Z_][\w\-.:]*)/);
+        if (rootElementMatch && rootElementMatch[1]) {
+            return rootElementMatch[1];
+        }
+        return 'root'; // fallback
+    }
+
+    /**
      * Detect root element type and build appropriate XML
      */
-    private buildXml(obj: XmlObject, originalFilePath: string): string {
-        // Detect the root element from the original file or object structure
-        let rootName = 'root';
+    private buildXml(obj: XmlObject, originalFilePath: string, originalXml: string): string {
+        // Extract the root element name directly from the original XML
+        let rootName = this.extractRootElementName(originalXml);
         
-        // Try to determine root element from object keys
-        const rootKeys = Object.keys(obj);
-        if (rootKeys.length > 0) {
-            rootName = rootKeys[0];
-        }
-
-        const knownRoots = {
-            'AddressSettings': 'Address.settings-meta.xml',
-            'PermissionSet': '.permissionset-meta.xml',
-            'Profile': '.profile-meta.xml',
-            'Flow': '.flow-meta.xml',
-            'Layout': '.layout-meta.xml',
-            'CustomObject': '.customObject-meta.xml',
-            'ApexClass': '.cls-meta.xml',
-            'ApexTrigger': '.trigger-meta.xml'
-        };
-
-        // Try to guess from filename
-        const filename = path.basename(originalFilePath);
-        const knownRoot = Object.entries(knownRoots).find(([, v]) => filename.includes(v));
-        if (knownRoot) {
-            rootName = knownRoot[0];
+        // Fallback: try to determine from parsed object keys (excluding special keys)
+        if (rootName === 'root') {
+            const rootKeys = Object.keys(obj).filter(key => key !== '$' && key !== '_');
+            if (rootKeys.length > 0) {
+                rootName = rootKeys[0];
+            }
         }
         
         const builder = new xml2js.Builder({
@@ -411,7 +408,7 @@ export class SfMetadataAdjuster {
             const sortedObject = this.sortXmlElements(xmlObject);
 
             // Build the XML
-            const sortedXml = this.buildXml(sortedObject, filePath);
+            const sortedXml = this.buildXml(sortedObject, filePath, originalXml);
 
             // Make sha256 hash of original and sorted XML
             const originalHash = this.hashString(originalXml);
