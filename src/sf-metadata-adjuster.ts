@@ -38,6 +38,11 @@ export class SfMetadataAdjuster {
         'layout-meta.xml'
     ];
 
+    // Always excluded types that cannot be included (due to special handling requirements)
+    private readonly alwaysExcluded: string[] = [
+        'flow-meta.xml'
+    ];
+
     constructor(folderPath: string, includeTypes: string[] = [], excludeTypes: string[] = []) {
         this.folderPath = folderPath;
         this.includeTypes = includeTypes.map(t => {
@@ -60,6 +65,38 @@ export class SfMetadataAdjuster {
                 return t;
             });
         }
+
+        // Validate that include types don't conflict with always-excluded types
+        this.validateIncludeTypes();
+    }
+
+    /**
+     * Validate that include types don't conflict with always-excluded types
+     */
+    private validateIncludeTypes(): void {
+        if (this.includeTypes.length === 0) {
+            return; // No include types specified, nothing to validate
+        }
+
+        const conflictingTypes: string[] = [];
+        
+        for (const includeType of this.includeTypes) {
+            for (const alwaysExcludedType of this.alwaysExcluded) {
+                if (includeType.endsWith(alwaysExcludedType)) {
+                    conflictingTypes.push(includeType);
+                    break;
+                }
+            }
+        }
+
+        if (conflictingTypes.length > 0) {
+            const conflictList = conflictingTypes.join(', ');
+            const alwaysExcludedList = this.alwaysExcluded.join(', ');
+            throw new Error(
+                `Invalid configuration: The following types cannot be included as they require special handling: ${conflictList}. ` +
+                `Always excluded types: ${alwaysExcludedList}`
+            );
+        }
     }
     
     /**
@@ -67,6 +104,14 @@ export class SfMetadataAdjuster {
      */
     private shouldExcludeFile(filePath: string): boolean {
         const fileName = path.basename(filePath);
+        
+        // Always exclude types that require special handling
+        const isAlwaysExcluded = this.alwaysExcluded.some(excludePattern => fileName.endsWith(excludePattern));
+        if (isAlwaysExcluded) {
+            return true;
+        }
+        
+        // Check regular exclusion list
         return this.excludeTypes.some(excludePattern => fileName.endsWith(excludePattern));
     }
     
