@@ -100,10 +100,8 @@ sf swift metadata adjust --help
 📋 Processing 25 specific metadata files
 🔤 Processing specified metadata files...
 
-✅  Already good: permissionsets/Marketing.permissionset-meta.xml
 ✏️  Modified: permissionsets/Admin.permissionset-meta.xml
 ✏️  Modified: profiles/Admin.profile-meta.xml
-✅  Already good: profiles/Standard.profile-meta.xml
 ...
 
 ============================================================

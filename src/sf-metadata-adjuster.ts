@@ -326,7 +326,6 @@ export class SfMetadataAdjuster {
                 this.stats.modified++;
                 this.stats.files.push(relativePath);
             } else {
-                console.log(`✅  Already good: ${relativePath}`);
                 this.stats.unchanged++;
                 this.stats.unchangedFiles.push(relativePath);
             }
