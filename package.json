@@ -27,7 +27,9 @@
     "sf-metadata-adjust": "ts-node src/commands/metadata/adjust.ts",
     "plugin:install": "sf plugins install .",
     "clean": "rm -rf dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha",
+    "test:coverage": "nyc mocha",
+    "test:watch": "mocha --watch"
   },
   "keywords": [
     "salesforce-cli-plugin",
@@ -52,8 +54,13 @@
   },
   "devDependencies": {
     "@salesforce/dev-scripts": "^11.0.4",
+    "@types/chai": "^5.2.3",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^24.9.1",
     "@types/xml2js": "^0.4.14",
+    "chai": "^6.2.0",
+    "mocha": "^11.7.4",
+    "nyc": "^17.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },

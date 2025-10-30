@@ -1,0 +1,19 @@
+{
+  "all": true,
+  "extension": [".ts"],
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "**/*.d.ts",
+    "**/*.test.ts",
+    "dist/**",
+    "node_modules/**",
+    "test/**",
+    "src/index.ts",
+    "src/commands/**"
+  ],
+  "reporter": ["text", "html", "lcov"],
+  "report-dir": "./coverage",
+  "check-coverage": false,
+  "sourceMap": true,
+  "instrument": true
+}
