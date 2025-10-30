@@ -2,6 +2,8 @@
  * XML Sorting utilities for Salesforce metadata files
  */
 
+import { getSortingRule, sortKeysWithPriority } from './sorting-rules.js';
+
 interface XmlObject {
     [key: string]: any;
 }
@@ -69,8 +71,11 @@ export function sortArrayElements(arr: any[], arrayKey: string): any[] {
 /**
  * Recursively sort XML object elements alphabetically with special handling for SF metadata
  * Uses case-sensitive sorting where uppercase letters sort before lowercase
+ * @param obj - The object to sort
+ * @param parentKey - The parent key for context-aware sorting
+ * @param filePath - Optional file path to apply file-specific sorting rules
  */
-export function sortXmlElements(obj: any, parentKey?: string): any {
+export function sortXmlElements(obj: any, parentKey?: string, filePath?: string): any {
     if (obj === null || obj === undefined) {
         return obj;
     }
@@ -79,32 +84,32 @@ export function sortXmlElements(obj: any, parentKey?: string): any {
         // Special handling for classAccesses - sort by apexClass
         if (parentKey === 'classAccesses') {
             const sorted = sortClassAccesses(obj);
-            return sorted.map(item => sortXmlElements(item));
+            return sorted.map(item => sortXmlElements(item, undefined, filePath));
         }
         
         // Handle other arrays with appropriate sorting
         if (parentKey && obj.length > 0 && typeof obj[0] === 'object') {
             const sorted = sortArrayElements(obj, parentKey);
-            return sorted.map(item => sortXmlElements(item));
+            return sorted.map(item => sortXmlElements(item, undefined, filePath));
         }
 
         // For other arrays, just recursively sort elements
-        return obj.map(item => sortXmlElements(item));
+        return obj.map(item => sortXmlElements(item, undefined, filePath));
     }
 
     if (typeof obj === 'object') {
         const sortedObj: XmlObject = {};
         
-        // Get all keys and sort them case-sensitive (uppercase before lowercase)
-        const sortedKeys = Object.keys(obj).sort((a, b) => {
-            if (a < b) return -1;
-            if (a > b) return 1;
-            return 0;
-        });
+        // Get sorting rule for this file if available
+        const sortingRule = getSortingRule(filePath);
+        
+        // Get all keys and sort them with priority rules if applicable
+        const keys = Object.keys(obj);
+        const sortedKeys = sortKeysWithPriority(keys, sortingRule?.priorityKeys);
 
         // Rebuild object with sorted keys
         for (const key of sortedKeys) {
-            sortedObj[key] = sortXmlElements(obj[key], key);
+            sortedObj[key] = sortXmlElements(obj[key], key, filePath);
         }
 
         return sortedObj;

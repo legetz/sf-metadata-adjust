@@ -317,8 +317,8 @@ export class SfMetadataAdjuster {
             // Parse the prefixed XML
             const xmlObject = await this.parseXml(prefixedXml);
 
-            // Sort the elements using imported sorter
-            const sortedObject = sortXmlElements(xmlObject);
+            // Sort the elements using imported sorter with file path for rule-based sorting
+            const sortedObject = sortXmlElements(xmlObject, undefined, filePath);
 
             // Build the XML
             const sortedXml = this.buildXml(sortedObject, filePath, originalXml);

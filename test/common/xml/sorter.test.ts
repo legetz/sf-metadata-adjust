@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { sortXmlElements, sortClassAccesses, sortArrayElements } from '../../../src/common/xml/sorter.js';
+import { sortKeysWithPriority } from '../../../src/common/xml/sorting-rules.js';
 
 describe('common/xml/sorter', () => {
     describe('sortClassAccesses', () => {
@@ -267,6 +268,63 @@ describe('common/xml/sorter', () => {
             expect(result[2].field[0]).to.equal('Example__c');
             expect(result[3].field[0]).to.equal('Exampleone__c');
             expect(result[4].field[0]).to.equal('Examplethree__c');
+        });
+    });
+
+    describe('Priority key sorting', () => {
+        it('should sort keys with priority keys first', () => {
+            const keys = ['type', 'fullName', 'label', 'description', 'externalId'];
+            const priorityKeys = ['fullName', 'label'];
+
+            const result = sortKeysWithPriority(keys, priorityKeys);
+
+            expect(result[0]).to.equal('fullName');
+            expect(result[1]).to.equal('label');
+            expect(result[2]).to.equal('description');
+            expect(result[3]).to.equal('externalId');
+            expect(result[4]).to.equal('type');
+        });
+
+        it('should handle missing priority keys', () => {
+            const keys = ['type', 'label', 'description', 'externalId'];
+            const priorityKeys = ['fullName', 'label'];
+
+            const result = sortKeysWithPriority(keys, priorityKeys);
+
+            expect(result[0]).to.equal('label');
+            expect(result[1]).to.equal('description');
+            expect(result[2]).to.equal('externalId');
+            expect(result[3]).to.equal('type');
+        });
+
+        it('should sort alphabetically when no priority keys', () => {
+            const keys = ['type', 'label', 'description', 'externalId'];
+
+            const result = sortKeysWithPriority(keys);
+
+            expect(result[0]).to.equal('description');
+            expect(result[1]).to.equal('externalId');
+            expect(result[2]).to.equal('label');
+            expect(result[3]).to.equal('type');
+        });
+
+        it('should apply priority sorting to field-meta.xml structure', () => {
+            const input = {
+                type: 'Text',
+                label: 'Test Field',
+                fullName: 'TestField__c',
+                externalId: false,
+                description: 'A test field'
+            };
+
+            const result = sortXmlElements(input, undefined, 'path/to/TestField__c.field-meta.xml');
+            const keys = Object.keys(result);
+
+            expect(keys[0]).to.equal('fullName');
+            expect(keys[1]).to.equal('description');
+            expect(keys[2]).to.equal('externalId');
+            expect(keys[3]).to.equal('label');
+            expect(keys[4]).to.equal('type');
         });
     });
 });
