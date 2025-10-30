@@ -207,31 +207,37 @@ export class SfMetadataAdjuster {
     }
 
     /**
-     * Restore XML entity encoding for special characters
-     * This fixes the issue where &apos; becomes ' during parse/build cycle
+     * Prefix XML entities with markers before parsing to preserve them
+     * This prevents the parser from converting entities to literals
      */
-    private restoreXmlEntities(xmlString: string): string {
-        // Replace literal apostrophes with &apos; entity
-        // Use a more compatible approach without negative lookbehind
+    private prefixXmlEntities(xmlString: string): string {
+        const entityMarker = '___ENTITY_MARKER___';
         let result = xmlString;
         
-        // First, temporarily mark existing entities to avoid double-encoding
-        const entityMarker = '___ENTITY_MARKER___';
+        // Mark all XML entities so they survive the parse/build cycle
         result = result.replace(/&apos;/g, `${entityMarker}apos;`);
         result = result.replace(/&quot;/g, `${entityMarker}quot;`);
         result = result.replace(/&amp;/g, `${entityMarker}amp;`);
         result = result.replace(/&lt;/g, `${entityMarker}lt;`);
         result = result.replace(/&gt;/g, `${entityMarker}gt;`);
         
-        // Now replace literal apostrophes with entities
-        result = result.replace(/'/g, '&apos;');
+        return result;
+    }
+
+    /**
+     * Restore XML entity encoding for special characters
+     * This fixes the issue where entities become literals during parse/build cycle
+     */
+    private restoreXmlEntities(xmlString: string): string {
+        const entityMarker = '___ENTITY_MARKER___';
+        let result = xmlString;
         
-        // Restore the original entities
-        result = result.replace(new RegExp(`${entityMarker}apos;`, 'g'), '&apos;');
-        result = result.replace(new RegExp(`${entityMarker}quot;`, 'g'), '&quot;');
+        // First, restore the marked entities back to proper XML entities
         result = result.replace(new RegExp(`${entityMarker}amp;`, 'g'), '&amp;');
         result = result.replace(new RegExp(`${entityMarker}lt;`, 'g'), '&lt;');
         result = result.replace(new RegExp(`${entityMarker}gt;`, 'g'), '&gt;');
+        result = result.replace(new RegExp(`${entityMarker}quot;`, 'g'), '&quot;');
+        result = result.replace(new RegExp(`${entityMarker}apos;`, 'g'), '&apos;');
         
         return result;
     }
@@ -302,9 +308,14 @@ export class SfMetadataAdjuster {
         try {
             const relativePath = path.relative(this.folderPath, filePath);
             
-            // Read and parse the file
+            // Read the file
             const originalXml = await this.readXmlFile(filePath);
-            const xmlObject = await this.parseXml(originalXml);
+            
+            // Prefix XML entities with markers before parsing to preserve them
+            const prefixedXml = this.prefixXmlEntities(originalXml);
+            
+            // Parse the prefixed XML
+            const xmlObject = await this.parseXml(prefixedXml);
 
             // Sort the elements using imported sorter
             const sortedObject = sortXmlElements(xmlObject);
