@@ -50,7 +50,7 @@ export class SfMetadataAdjuster {
         this.includeTypes = includeTypes.map(t => {
             // Normalize type names - ensure they end with -meta.xml
             if (!t.endsWith('-meta.xml')) {
-                return t.endsWith('.xml') ? t.replace('.xml', '-meta.xml') : `${t}-meta.xml`;
+                return `${t}-meta.xml`;
             }
             return t;
         });
@@ -62,7 +62,7 @@ export class SfMetadataAdjuster {
             this.excludeTypes = excludeTypes.map(t => {
                 // Normalize type names - ensure they end with -meta.xml
                 if (!t.endsWith('-meta.xml')) {
-                    return t.endsWith('.xml') ? t.replace('.xml', '-meta.xml') : `${t}-meta.xml`;
+                    return `${t}-meta.xml`;
                 }
                 return t;
             });
@@ -152,13 +152,11 @@ export class SfMetadataAdjuster {
                 } else if (entry.isFile() && entry.name.endsWith('-meta.xml')) {
                     // Check if file should be excluded
                     if (this.shouldExcludeFile(fullPath)) {
-                        // console.log(`⏭️  Skipping (excluded): ${path.relative(this.folderPath, fullPath)}`);
                         this.stats.skipped++;
                         continue;
                     }
                     // Check if file matches include list
                     if (!this.shouldIncludeFile(fullPath)) {
-                        // console.log(`⏭️  Skipping (not in include list): ${path.relative(this.folderPath, fullPath)}`);
                         this.stats.skipped++;
                         continue;
                     }
@@ -413,13 +411,11 @@ export class SfMetadataAdjuster {
                 }
                 // Check exclude list
                 if (this.shouldExcludeFile(file)) {
-                    // console.log(`⏭️  Skipping (excluded): ${path.relative(this.folderPath, file)}`);
                     this.stats.skipped++;
                     return false;
                 }
                 // Check include list
                 if (!this.shouldIncludeFile(file)) {
-                    // console.log(`⏭️  Skipping (not in include list): ${path.relative(this.folderPath, file)}`);
                     this.stats.skipped++;
                     return false;
                 }
