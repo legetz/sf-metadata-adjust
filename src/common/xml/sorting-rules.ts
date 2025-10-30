@@ -34,7 +34,12 @@ export const DEFAULT_SORTING_RULES: SortingRule[] = [
         filePattern: 'profile-meta.xml',
         priorityKeys: ['fullName', 'custom'],
         caseSensitive: true
-    }
+    },
+    {
+        filePattern: 'listView-meta.xml',
+        priorityKeys: ['fullName'],
+        caseSensitive: true
+    },
 ];
 
 /**
