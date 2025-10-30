@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
-import * as crypto from 'crypto';
 import { sortXmlElements } from './common/xml/sorter.js';
+import { createFileBackup } from './common/helper/backup.js';
+import { hashString } from './common/helper/string.js';
 
 interface XmlObject {
     [key: string]: any;
@@ -314,8 +315,8 @@ export class SfMetadataAdjuster {
             const sortedXml = this.buildXml(sortedObject, filePath, originalXml);
 
             // Make sha256 hash of original and sorted XML
-            const originalHash = this.hashString(originalXml);
-            const sortedHash = this.hashString(sortedXml);
+            const originalHash = hashString(originalXml);
+            const sortedHash = hashString(sortedXml);
 
             // Compare original and sorted to see if changes are needed
             const needsUpdate = originalHash !== sortedHash;
@@ -343,42 +344,6 @@ export class SfMetadataAdjuster {
     }
 
     /**
-     * Hash a string using SHA-256, return string digest
-     */
-    private hashString(input: string): string {
-        return crypto.createHash('sha256').update(input).digest('hex');
-    }
-
-    /**
-     * Create backup of files before processing
-     */
-    private createBackup(files: string[]): string {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupDir = path.join(this.folderPath, `.backup-${timestamp}`);
-        
-        try {
-            fs.mkdirSync(backupDir, { recursive: true });
-            
-            for (const file of files) {
-                const relativePath = path.relative(this.folderPath, file);
-                const backupFile = path.join(backupDir, relativePath);
-                const backupFileDir = path.dirname(backupFile);
-                
-                // Ensure backup directory exists
-                fs.mkdirSync(backupFileDir, { recursive: true });
-                
-                // Copy file to backup
-                fs.copyFileSync(file, backupFile);
-            }
-            
-            console.log(`📁 Backup created: ${path.relative(this.folderPath, backupDir)}`);
-            return backupDir;
-        } catch (error) {
-            throw new Error(`Failed to create backup: ${error}`);
-        }
-    }
-
-    /**
      * Main process: find and adjust all metadata files
      */
     async process(createBackup: boolean = true): Promise<void> {
@@ -396,7 +361,7 @@ export class SfMetadataAdjuster {
 
             // Create backup if requested
             if (createBackup) {
-                this.createBackup(metadataFiles);
+                createFileBackup(metadataFiles, this.folderPath);
             }
 
             console.log('🔤 Processing metadata files...\n');
@@ -470,7 +435,7 @@ export class SfMetadataAdjuster {
 
             // Create backup if requested
             if (createBackup) {
-                this.createBackup(validFiles);
+                createFileBackup(validFiles, this.folderPath);
             }
 
             console.log('🔤 Processing specified metadata files...\n');
