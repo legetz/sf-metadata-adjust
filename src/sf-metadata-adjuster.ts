@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
 import * as crypto from 'crypto';
+import { sortXmlElements } from './common/xml/sorter.js';
 
 interface XmlObject {
     [key: string]: any;
@@ -207,104 +208,6 @@ export class SfMetadataAdjuster {
     }
 
     /**
-     * Sort classAccesses elements by apexClass name
-     */
-    private sortClassAccesses(classAccesses: any[]): any[] {
-        return classAccesses.sort((a, b) => {
-            const classA = a.apexClass?.[0] || '';
-            const classB = b.apexClass?.[0] || '';
-            return classA.toLowerCase().localeCompare(classB.toLowerCase());
-        });
-    }
-
-    /**
-     * Sort other array elements by their first key or content
-     */
-    private sortArrayElements(arr: any[], arrayKey: string): any[] {
-        return arr.sort((a, b) => {
-            // For fieldPermissions, sort by field name
-            if (arrayKey === 'fieldPermissions') {
-                const fieldA = a.field?.[0] || '';
-                const fieldB = b.field?.[0] || '';
-                return fieldA.toLowerCase().localeCompare(fieldB.toLowerCase());
-            }
-
-            // For other common Salesforce metadata arrays
-            if (arrayKey === 'customPermissions' ||
-                arrayKey === 'customMetadataTypeAccesses' || 
-                arrayKey === 'externalCredentialPrincipalAccesses' ||
-                arrayKey === 'objectPermissions' ||
-                arrayKey === 'recordTypeVisibilities' ||
-                arrayKey === 'tabVisibilities' || 
-                arrayKey === 'states') {
-                const nameA = a.name?.[0] || a.object?.[0] || a.recordType?.[0] || a.tab?.[0] || a.isoCode?.[0] || '';
-                const nameB = b.name?.[0] || b.object?.[0] || b.recordType?.[0] || b.tab?.[0] || b.isoCode?.[0] || '';
-                return nameA.toLowerCase().localeCompare(nameB.toLowerCase());
-            }
-
-            // For other arrays, try to find a suitable sorting key
-            const keys = Object.keys(a);
-            if (keys.length > 0) {
-                const sortKey = keys.find(k => 
-                    k === 'name' || 
-                    k === 'fullName' || 
-                    k === 'field' || 
-                    k.includes('Name')
-                ) || keys[0];
-                const valueA = a[sortKey]?.[0] || '';
-                const valueB = b[sortKey]?.[0] || '';
-                return valueA.toLowerCase().localeCompare(valueB.toLowerCase());
-            }
-
-            return 0;
-        });
-    }
-
-    /**
-     * Recursively sort XML object elements alphabetically with special handling for SF metadata
-     */
-    private sortXmlElements(obj: any, parentKey?: string): any {
-        if (obj === null || obj === undefined) {
-            return obj;
-        }
-
-        if (Array.isArray(obj)) {
-            // Special handling for classAccesses - sort by apexClass
-            if (parentKey === 'classAccesses') {
-                const sorted = this.sortClassAccesses(obj);
-                return sorted.map(item => this.sortXmlElements(item));
-            }
-            
-            // Handle other arrays with appropriate sorting
-            if (parentKey && obj.length > 0 && typeof obj[0] === 'object') {
-                const sorted = this.sortArrayElements(obj, parentKey);
-                return sorted.map(item => this.sortXmlElements(item));
-            }
-
-            // For other arrays, just recursively sort elements
-            return obj.map(item => this.sortXmlElements(item));
-        }
-
-        if (typeof obj === 'object') {
-            const sortedObj: XmlObject = {};
-            
-            // Get all keys and sort them alphabetically (a-z)
-            const sortedKeys = Object.keys(obj).sort((a, b) => 
-                a.toLowerCase().localeCompare(b.toLowerCase())
-            );
-
-            // Rebuild object with sorted keys
-            for (const key of sortedKeys) {
-                sortedObj[key] = this.sortXmlElements(obj[key], key);
-            }
-
-            return sortedObj;
-        }
-
-        return obj;
-    }
-
-    /**
      * Restore XML entity encoding for special characters
      * This fixes the issue where &apos; becomes ' during parse/build cycle
      */
@@ -404,8 +307,8 @@ export class SfMetadataAdjuster {
             const originalXml = await this.readXmlFile(filePath);
             const xmlObject = await this.parseXml(originalXml);
 
-            // Sort the elements
-            const sortedObject = this.sortXmlElements(xmlObject);
+            // Sort the elements using imported sorter
+            const sortedObject = sortXmlElements(xmlObject);
 
             // Build the XML
             const sortedXml = this.buildXml(sortedObject, filePath, originalXml);
