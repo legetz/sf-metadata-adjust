@@ -23,6 +23,9 @@ Only process specific metadata types. Accepts comma-separated values. Can specif
 # flags.exclude.description
 Exclude specific metadata types from processing. Accepts comma-separated values. Default exclusions: reportType, flexipage, layout.
 
+# flags.all.description
+Process ALL metadata types without whitelist restrictions. By default, only safe metadata types (profiles, permissionsets, etc.) are processed. Use this flag to override the whitelist and process any metadata type.
+
 # examples
 - Adjust metadata files within current folder: 
 <%= config.bin %> <%= command.id %>
@@ -52,4 +55,14 @@ Skip reportType and flexipage files:
 <%= config.bin %> <%= command.id %> --exclude reportType,flexipage
 
 Skip layout files and only process permissionset and profile files:
+Skip layout files and only process permissionset and profile files:
 <%= config.bin %> <%= command.id %> --exclude layout --include permissionset,profile
+
+Process ALL metadata types (bypass whitelist):
+<%= config.bin %> <%= command.id %> --all
+
+Process ALL metadata types with backup:
+<%= config.bin %> <%= command.id %> --all --backup
+
+Process ALL metadata types changed in last 10 commits:
+<%= config.bin %> <%= command.id %> --all --git-depth 10

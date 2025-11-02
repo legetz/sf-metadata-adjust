@@ -46,6 +46,11 @@ export default class MetadataAdjust extends SfCommand<void> {
       multiple: true,
       delimiter: ',',
     }),
+    all: Flags.boolean({
+      char: 'a',
+      description: messages.getMessage('flags.all.description'),
+      default: false,
+    }),
   };
 
   /**
@@ -123,6 +128,11 @@ export default class MetadataAdjust extends SfCommand<void> {
     if (excludeTypes.length > 0) {
       console.log(`\n🚫 Excluding: ${excludeTypes.join(', ')}`);
     }
+    
+    // Display --all flag status
+    if (flags.all) {
+      console.log(`\n🌐 Processing ALL metadata types (whitelist disabled)`);
+    }
 
     try {
       // If git-depth is specified, process only changed files
@@ -138,11 +148,11 @@ export default class MetadataAdjust extends SfCommand<void> {
           return;
         }
 
-        const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes);
+        const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes, flags.all);
         await adjuster.processSpecificFiles(changedFiles, flags.backup);
       } else {
         // Process all files in directory
-        const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes);
+        const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes, flags.all);
         await adjuster.process(flags.backup);
       }
       

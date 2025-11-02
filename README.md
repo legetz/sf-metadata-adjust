@@ -7,6 +7,7 @@ A fast and powerful Salesforce CLI plugin with utilities for metadata formatting
 - 📊 **Detailed Reporting** - Shows which files were modified vs already okay
 - 🔄 **Recursive Processing** - Handles nested directory structures
 - 🔍 **Git Integration** - Process only files changed in recent commits
+- 🛡️ **Safety Whitelist** - Only processes safe metadata types by default (can be bypassed with `--all`)
 - ⏭️ **Exclude Filter** - Skip specific metadata types (e.g., `--exclude field,object`) (defaults: reportType, flexipage, layout)
 - 🎯 **Include Filter** - Target only specific metadata types (e.g., `--include permissionset,profile`)
 - ✅ **Error Handling** - Continues processing even if individual files fail
@@ -75,6 +76,15 @@ sf swift metadata adjust --exclude profile,permissionset
 # Include with custom exclusions
 sf swift metadata adjust --include permissionset,field --exclude profile
 
+# Process ALL metadata types (bypass safety whitelist)
+sf swift metadata adjust --all
+
+# Process ALL types with backup
+sf swift metadata adjust --all --backup
+
+# Process ALL types changed in last 5 commits
+sf swift metadata adjust --all --git-depth 5
+
 # Get help
 sf swift metadata adjust --help
 ```
@@ -88,8 +98,9 @@ sf swift metadata adjust --help
 |------|-------|-------------|---------|
 | `--target-dir` | `-d` | Target directory to process | `.` (current) |
 | `--git-depth` | `-g` | Process only N commits | `0` (all files) |
-| `--include` | `-i` | Only process specific types | All types |
+| `--include` | `-i` | Only process specific types | All whitelisted types |
 | `--exclude` | `-e` | Exclude specific types | `reportType,flexipage,layout` |
+| `--all` | `-a` | Process ALL types (bypass whitelist) | Disabled |
 | `--backup` | - | Create backup before processing | Disabled |
 | `--help` | `-h` | Show help information | - |
 
@@ -158,6 +169,70 @@ sf swift metadata adjust --exclude reportType,customObject
 
 These files are counted in the summary statistics but never modified.
 
+## Safety Whitelist
+
+By default, the tool uses a **safety whitelist** to only process metadata types that are known to be safe for XML sorting. This prevents potential issues with complex metadata types that may have specific ordering requirements.
+
+### Whitelisted Types (Safe by Default)
+
+The following metadata types are whitelisted and will be processed by default:
+
+- `cls-meta.xml` - Apex classes
+- `customObject-meta.xml` -  Custom Objects
+- `field-meta.xml` - Fields
+- `labels-meta.xml` - Labels
+- `object-meta.xml` - Standard Objects
+- `permissionset-meta.xml` - Permission Sets
+- `profile-meta.xml` - User Profiles
+- `settings-meta.xml` - Org Settings (various types)
+- `trigger-meta.xml` - Triggers
+- `validationRule-meta.xml` - Validation Rules
+
+### Always Excluded Types
+
+Some types are **always excluded** due to special handling requirements:
+
+- `flow-meta.xml` - Flows (require special key ordering logic)
+
+### Using the Whitelist
+
+```bash
+# Default: Only process whitelisted types
+sf swift metadata adjust
+
+# Specific whitelisted types only
+sf swift metadata adjust --include permissionset,profile
+
+# Error: reportType is not whitelisted
+sf swift metadata adjust --include reportType
+# ❌ Invalid configuration: The following types are not in the allowed whitelist: reportType-meta.xml
+# Use --all flag to process all metadata types without whitelist restrictions.
+```
+
+### Bypassing the Whitelist
+
+Use the `--all` flag to process any metadata type, bypassing whitelist restrictions:
+
+```bash
+# Process ALL metadata types (use with caution)
+sf swift metadata adjust --all
+
+# Process specific non-whitelisted types
+sf swift metadata adjust --all --include reportType,customField
+
+# Process ALL types from recent commits
+sf swift metadata adjust --all --git-depth 10
+
+# Process ALL with backup (recommended when experimenting)
+sf swift metadata adjust --all --backup
+```
+
+⚠️ **Important**: When using `--all`, be aware that some complex metadata types may have specific ordering requirements that standard alphabetical sorting doesn't preserve. Always:
+- Test in a non-production environment first
+- Use `--backup` flag for safety
+- Review changes carefully before committing
+- Check that metadata still deploys correctly
+
 ## Performance Tips
 
 1. **Use git-depth for large repos**: Only process changed files
@@ -193,6 +268,12 @@ fi
 - Ensure you're in a Git repository
 - Check git-depth doesn't exceed commit count
 
+### "Not in the allowed whitelist"
+- You're trying to include a non-whitelisted metadata type
+- Use `--all` flag to bypass whitelist restrictions
+- Review the whitelisted types in the error message
+- Example: `sf swift metadata adjust --all --include reportType`
+
 ### "Permission denied"
 - Check file permissions
 - Use `--backup` to preserve originals if needed
@@ -210,11 +291,16 @@ fi
 - Review modified files in summary
 - Add to pre-commit hooks
 - Use `--backup` when testing major changes
+- Stick to whitelisted metadata types for safety
+- Test with `--all` flag in non-production first
+- Use `--all --backup` when processing new metadata types
 
 ❌ **DON'T**:
 - Process backup folders (add to gitignore)
 - Ignore errors in CI/CD
 - Forget to commit adjusted files
+- Use `--all` flag in production without thorough testing
+- Process complex metadata types without understanding their structure
 
 ## Contributing
 

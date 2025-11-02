@@ -23,6 +23,7 @@ export class SfMetadataAdjuster {
     private folderPath: string;
     private includeTypes: string[];
     private excludeTypes: string[];
+    private allowAll: boolean;
     private stats: ProcessingStats = {
         processed: 0,
         unchanged: 0,
@@ -32,6 +33,21 @@ export class SfMetadataAdjuster {
         files: [],
         unchangedFiles: []
     };
+    
+    // Whitelist of allowed metadata file types for safe processing
+    // Only these types will be processed unless --all flag is used
+    private readonly allowedMetadataTypes: string[] = [
+        'cls-meta.xml',
+        'customObject-meta.xml',
+        'field-meta.xml',
+        'labels-meta.xml',
+        'object-meta.xml',
+        'permissionset-meta.xml',
+        'profile-meta.xml',
+        'settings-meta.xml',
+        'trigger-meta.xml',
+        'validationRule-meta.xml',
+    ];
     
     // Default exclusions (used when --exclude is not specified)
     private readonly defaultExclusions: string[] = [
@@ -45,8 +61,10 @@ export class SfMetadataAdjuster {
         'flow-meta.xml'
     ];
 
-    constructor(folderPath: string, includeTypes: string[] = [], excludeTypes: string[] = []) {
+    constructor(folderPath: string, includeTypes: string[] = [], excludeTypes: string[] = [], allowAll: boolean = false) {
         this.folderPath = folderPath;
+        this.allowAll = allowAll;
+        
         this.includeTypes = includeTypes.map(t => {
             // Normalize type names - ensure they end with -meta.xml
             if (!t.endsWith('-meta.xml')) {
@@ -70,6 +88,41 @@ export class SfMetadataAdjuster {
 
         // Validate that include types don't conflict with always-excluded types
         this.validateIncludeTypes();
+        
+        // Validate that include types are whitelisted (unless --all is specified)
+        this.validateWhitelistedTypes();
+    }
+
+    /**
+     * Validate that include types are whitelisted when --all is not specified
+     */
+    private validateWhitelistedTypes(): void {
+        // Skip validation if --all flag is used or no include types specified
+        if (this.allowAll || this.includeTypes.length === 0) {
+            return;
+        }
+
+        const nonWhitelistedTypes: string[] = [];
+        
+        for (const includeType of this.includeTypes) {
+            const isWhitelisted = this.allowedMetadataTypes.some(allowedType => 
+                includeType.endsWith(allowedType)
+            );
+            
+            if (!isWhitelisted) {
+                nonWhitelistedTypes.push(includeType);
+            }
+        }
+
+        if (nonWhitelistedTypes.length > 0) {
+            const nonWhitelistedList = nonWhitelistedTypes.join(', ');
+            const allowedList = this.allowedMetadataTypes.join(', ');
+            throw new Error(
+                `Invalid configuration: The following types are not in the allowed whitelist: ${nonWhitelistedList}.\n` +
+                `Allowed types: ${allowedList}\n` +
+                `Use --all flag to process all metadata types without whitelist restrictions.`
+            );
+        }
     }
 
     /**
@@ -121,13 +174,20 @@ export class SfMetadataAdjuster {
      * Check if a file matches the include list (if specified)
      */
     private shouldIncludeFile(filePath: string): boolean {
-        // If no include types specified, include all files (except excludes)
-        if (this.includeTypes.length === 0) {
-            return true;
+        const fileName = path.basename(filePath);
+        
+        // If include types are specified, check against them
+        if (this.includeTypes.length > 0) {
+            return this.includeTypes.some(includePattern => fileName.endsWith(includePattern));
         }
         
-        const fileName = path.basename(filePath);
-        return this.includeTypes.some(includePattern => fileName.endsWith(includePattern));
+        // If no include types specified and --all is NOT used, check against whitelist
+        if (!this.allowAll) {
+            return this.allowedMetadataTypes.some(allowedType => fileName.endsWith(allowedType));
+        }
+        
+        // If --all is used and no specific includes, accept all files (except excludes)
+        return true;
     }
 
     /**
