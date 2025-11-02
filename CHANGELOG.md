@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-11-02
+
+### Added
+- 🛡️ **Safety Whitelist System** - Only processes safe metadata types by default (profiles, permissionsets, etc.)
+- 🌐 **--all Flag** - Bypass whitelist to process any metadata type (use with caution)
+- ✅ **Whitelist Validation** - Prevents processing non-whitelisted types unless --all is specified
+- 🔍 **Git Conflict Detection** - New `sf swift detect git conflicts` command to find .rej files
+- 📊 **Enhanced Logging** - Improved console output with emojis for better readability
+- 🚫 **Always-Excluded Types** - Flow files permanently excluded due to special handling requirements
+- 🔐 **XML Entity Preservation** - Maintains XML entities like &apos; during processing
+- 🎯 **Automatic Root Element Detection** - Extracts root element from XML without hardcoded mappings
+- ⚡ **Performance Improvements** - Skips node_modules and .git directories during scanning
+
+### Changed
+- 📝 **Improved Error Messages** - Clearer validation errors with helpful suggestions
+- 🔧 **Parser Configuration** - Enhanced XML parsing settings for better entity handling
+- 📋 **Updated Documentation** - Comprehensive README updates for whitelist feature
+
+### Fixed
+- 🐛 **XML Entity Encoding** - Fixed issue where &apos; was converted to literal apostrophe
+- 🔑 **Root Element Extraction** - Resolved issue with $ key appearing instead of actual root element name
+- 📦 **Type Normalization** - Improved handling of -meta.xml suffix in include/exclude flags
+
+### Security
+- 🛡️ **Safe-by-Default** - Whitelist prevents accidental processing of complex metadata types
+
 ## [1.0.0] - 2025-10-28
 
 ### Added
@@ -25,4 +51,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 - **Command**: `sf swift metadata adjust` - Main command for sorting metadata files
 
+[1.0.4]: https://github.com/legetz/sf-swift/releases/tag/v1.0.4
 [1.0.0]: https://github.com/legetz/sf-swift/releases/tag/v1.0.0
