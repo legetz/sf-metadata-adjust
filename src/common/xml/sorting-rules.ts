@@ -40,6 +40,11 @@ export const DEFAULT_SORTING_RULES: SortingRule[] = [
         priorityKeys: ['fullName'],
         caseSensitive: true
     },
+    {
+        filePattern: 'labels-meta.xml',
+        priorityKeys: ['fullName'],
+        caseSensitive: true
+    },
 ];
 
 /**
