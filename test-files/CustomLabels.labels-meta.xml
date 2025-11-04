@@ -8,6 +8,9 @@
     <shortDescription>FOO</shortDescription>
     <value>Another example</value>
     </labels>
+
+
+    
     <labels>
         <categories>BAR</categories>
         <fullName>ANOTHER_EXAMPLE2</fullName>

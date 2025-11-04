@@ -4,6 +4,8 @@
         <apexClass>BetaClass</apexClass>
         <enabled>false</enabled>
     </classAccesses>
+
+    
     <classAccesses>
         <apexClass>ZebraClass</apexClass>
         <enabled>true</enabled>
