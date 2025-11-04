@@ -26,7 +26,7 @@ jobs:
       pull-requests: write  # Required to comment on PR
     
     steps:
-      - name: Checkout PR branch
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
@@ -39,7 +39,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
-      - name: Install SF CLI and swift plugin
+      - name: Install SF Swift plugin
         run: |
           npm install -g @salesforce/cli
           echo "y" | sf plugins install sf-swift
@@ -49,7 +49,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
       
-      - name: Calculate PR commit depth
+      - name: Calculate PR commit count
         id: calc-depth
         run: |
           # Get the number of commits in the PR
@@ -60,16 +60,16 @@ jobs:
           # Determine if we should use git-depth based on ADJUST_DELTA_ONLY
           if [ "${{ env.ADJUST_DELTA_ONLY }}" = "true" ]; then
             echo "use_git_depth=true" >> $GITHUB_OUTPUT
-            echo "✅ Will process only files changed in PR (delta mode)"
+            echo "✅ Will process only files changed (delta mode)"
           else
             echo "use_git_depth=false" >> $GITHUB_OUTPUT
-            echo "📁 Will process all files in directory"
+            echo "📁 Will process all files (full mode)"
           fi
       
-      - name: Run metadata adjuster
+      - name: Run metadata adjust
         id: format
         run: |
-          echo "Running metadata adjuster..."
+          echo "Configure parameters:"
           
           # Build the command based on configuration
           CMD="sf swift metadata adjust"
@@ -89,27 +89,23 @@ jobs:
           fi
           
           # Execute the command
-          echo "Executing: ${CMD}"
+          echo "Running: ${CMD}"
           eval ${CMD}
           
           # Check if any files were modified
           if git diff --quiet; then
             echo "modified=false" >> $GITHUB_OUTPUT
-            echo "No metadata files were modified"
           else
             echo "modified=true" >> $GITHUB_OUTPUT
-            echo "Metadata files were modified"
           fi
       
       - name: Commit changes
         if: steps.format.outputs.modified == 'true'
         run: |
           git add **/*-meta.xml
-          git commit -m "🤖 Auto-adjusted metadata files
+          git commit -m "🤖 Adjusted metadata files
 
-          Automatically adjusted by sf-swift metadata adjuster.
-          Types processed: ${{ env.INCLUDED_TYPES || 'all whitelisted types' }}"
-          
+          Powered by sf-swift plugin."
           git push
       
       - name: Comment on PR
@@ -126,9 +122,9 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '🤖 **Metadata Auto-Adjustment Applied**\n\n' +
+              body: '🤖 **Adjusted metadata files**\n\n' +
                     'Your metadata files have been automatically adjusted for consistency.\n\n' +
                     '**Scope:** `' + scope + '`\n' +
-                    '**Types processed:** `${{ env.INCLUDED_TYPES || 'all whitelisted types' }}`\n\n' +
+                    '**Types processed:** `${{ env.INCLUDED_TYPES || 'All whitelisted types' }}`\n\n' +
                     'Please review the changes in the latest commit.'
             })

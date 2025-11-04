@@ -258,19 +258,16 @@ This plugin includes a ready-to-use GHA workflow that automatically adjusts meta
 
 #### Setup
 
-1. The workflow file is already included: `.github/workflows/auto-adjust-metadata.yml`
+1. The workflow file is already included: `.github/workflows/pr-metadata-adjust.yml`
 2. Configure which metadata types to process by editing the `INCLUDED_TYPES` environment variable:
 
 ```yaml
 env:
-  # Leave empty to process all whitelisted types
-  INCLUDED_TYPES: 'profile,permissionset'
-  
-  # Or process more types
-  INCLUDED_TYPES: 'profile,permissionset,customMetadata,settings'
-  
-  # Or process all whitelisted types (leave empty)
+  # Process all whitelisted types
   INCLUDED_TYPES: ''
+
+  # Process only defined types
+  INCLUDED_TYPES: 'profile,permissionset'
   
   # Only process files changed in PR (recommended)
   ADJUST_DELTA_ONLY: 'true'
@@ -304,11 +301,11 @@ env:
 
 #### Customization
 
-Edit `.github/workflows/auto-adjust-metadata.yml` to:
+Edit `.github/workflows/pr-metadata-adjust.yml` to:
 - Change `INCLUDED_TYPES` to process different metadata types
 - Set `ADJUST_DELTA_ONLY: 'true'` for PR-only processing (recommended)
 - Set `ADJUST_DELTA_ONLY: 'false'` to process all files in directory
-- Modify the commit message format
+- Adjust commit message format
 - Adjust PR comment templates
 - Change trigger conditions
 
