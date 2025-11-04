@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
-    <categories>FOO</categories>
-    <fullName>ANOTHER_EXAMPLE</fullName>
-    <language>en_US</language>
-    <protected>false</protected>
-    <shortDescription>FOO</shortDescription>
-    <value>Another example</value>
+        <categories>BAR</categories>
+        <fullName>ABC</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Test</shortDescription>
+        <value>ABC</value>
     </labels>
-
-
-    
+    <labels>
+        <categories>FOO</categories>
+        <fullName>ANOTHER_EXAMPLE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FOO</shortDescription>
+        <value>Another example</value>
+    </labels>
     <labels>
         <categories>BAR</categories>
         <fullName>ANOTHER_EXAMPLE2</fullName>
@@ -18,13 +23,5 @@
         <protected>false</protected>
         <shortDescription>Test</shortDescription>
         <value>Another example 2</value>
-    </labels>
-    <labels>
-        <categories>BAR</categories>
-        <fullName>ABC</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Test</shortDescription>
-        <value>ABC</value>
     </labels>
 </CustomLabels>
