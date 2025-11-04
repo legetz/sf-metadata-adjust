@@ -11,7 +11,7 @@ env:
   # Configure which metadata types to include (comma-separated, no spaces)
   # Leave empty to process all whitelisted types
   # Example: 'profile,permissionset' or 'profile,permissionset,customMetadata'
-  INCLUDED_TYPES: 'profile,permissionset'
+  INCLUDED_TYPES: ''
   # Only process files changed in the PR (not the entire directory)
   # Set to 'true' to only adjust files that were modified in this PR
   # Set to 'false' to process all files in the directory
