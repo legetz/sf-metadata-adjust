@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2025-11-04
+
+### Features
+- **Workflow**: `.github/workflows/pr-metadata-adjust.yml` - Automatic PR formatting
+- **Delta Mode**: Process only files changed in PR when `ADJUST_DELTA_ONLY: 'true'`
+- **Full Mode**: Process all metadata files when `ADJUST_DELTA_ONLY: 'false'`
+- **Auto-Commit**: Automatically commits formatting changes back to PR branch
+- **PR Notifications**: Comments on PR with processing results and file counts
+
 ## [1.0.4] - 2025-11-02
 
 ### Added
@@ -51,5 +60,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 - **Command**: `sf swift metadata adjust` - Main command for sorting metadata files
 
+[1.0.5]: https://github.com/legetz/sf-swift/releases/tag/v1.0.5
 [1.0.4]: https://github.com/legetz/sf-swift/releases/tag/v1.0.4
 [1.0.0]: https://github.com/legetz/sf-swift/releases/tag/v1.0.0
