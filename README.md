@@ -271,6 +271,12 @@ env:
   
   # Or process all whitelisted types (leave empty)
   INCLUDED_TYPES: ''
+  
+  # Only process files changed in PR (recommended)
+  ADJUST_DELTA_ONLY: 'true'
+  
+  # Or process all files in directory
+  ADJUST_DELTA_ONLY: 'false'
 ```
 
 #### Features
@@ -279,19 +285,29 @@ env:
 - 🤖 **Auto-Commit** - Commits formatting changes back to PR branch
 - 💬 **PR Comments** - Notifies about formatting status
 - 🎯 **Configurable** - Choose which metadata types to process
-- ⚡ **Efficient** - Only processes specified types
+- ⚡ **Delta Mode** - Optionally process only files changed in the PR
 
 #### Workflow Behavior
 
 1. **Triggered** when a PR is opened, synchronized, or reopened with metadata file changes
-2. **Formats** metadata files based on `INCLUDED_TYPES` configuration
-3. **Commits** changes automatically if any files were modified
-4. **Comments** on the PR with the formatting status
+2. **Delta Mode** (when `ADJUST_DELTA_ONLY: 'true'`):
+   - Automatically calculates the number of commits in the PR
+   - Uses `--git-depth <commit_count>` to process only files changed in the PR
+   - PR comment indicates: "Changed files only (X commits)"
+3. **Full Mode** (when `ADJUST_DELTA_ONLY: 'false'` or unset):
+   - Processes all metadata files in the configured directory
+   - PR comment indicates: "All files in directory"
+4. **Formats** metadata files based on `INCLUDED_TYPES` configuration
+5. **Commits** changes automatically if any files were modified
+6. **Comments** on the PR with the formatting status and scope
+
 
 #### Customization
 
 Edit `.github/workflows/auto-adjust-metadata.yml` to:
 - Change `INCLUDED_TYPES` to process different metadata types
+- Set `ADJUST_DELTA_ONLY: 'true'` for PR-only processing (recommended)
+- Set `ADJUST_DELTA_ONLY: 'false'` to process all files in directory
 - Modify the commit message format
 - Adjust PR comment templates
 - Change trigger conditions
