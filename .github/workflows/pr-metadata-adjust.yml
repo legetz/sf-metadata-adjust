@@ -95,15 +95,20 @@ jobs:
           # Check if any files were modified
           if git diff --quiet; then
             echo "modified=false" >> $GITHUB_OUTPUT
+            echo "file_count=0" >> $GITHUB_OUTPUT
           else
             echo "modified=true" >> $GITHUB_OUTPUT
+            # Count modified files
+            FILE_COUNT=$(git diff --name-only | wc -l | xargs)
+            echo "file_count=${FILE_COUNT}" >> $GITHUB_OUTPUT
+            echo "📝 Modified ${FILE_COUNT} file(s)"
           fi
       
       - name: Commit changes
         if: steps.format.outputs.modified == 'true'
         run: |
           git add **/*-meta.xml
-          git commit -m "🤖 Adjusted metadata files
+          git commit -m "🤖 Adjusted ${{ steps.format.outputs.file_count }} metadata files
 
           Powered by sf-swift plugin."
           git push
@@ -114,6 +119,7 @@ jobs:
         with:
           script: |
             const deltaMode = '${{ env.ADJUST_DELTA_ONLY }}' === 'true';
+            const fileCount = '${{ steps.format.outputs.file_count }}';
             const scope = deltaMode 
               ? `Changed files only (${context.payload.pull_request.commits} commits)` 
               : 'All files in directory';
@@ -122,8 +128,8 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '🤖 **Adjusted metadata files**\n\n' +
-                    'Your metadata files have been automatically adjusted for consistency.\n\n' +
+              body: '🤖 **Adjusted ' + fileCount + ' metadata files**\n\n' +
+                    fileCount + ' metadata files have been automatically adjusted for consistency.\n\n' +
                     '**Scope:** `' + scope + '`\n' +
                     '**Types processed:** `${{ env.INCLUDED_TYPES || 'All whitelisted types' }}`\n\n' +
                     'Please review the changes in the latest commit.'
