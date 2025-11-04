@@ -1,4 +1,4 @@
-name: Auto adjust metadata
+name: PR metadata adjust
 
 on:
   pull_request:
@@ -129,7 +129,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: '🤖 **Adjusted ' + fileCount + ' metadata files**\n\n' +
-                    fileCount + ' metadata files have been automatically adjusted for consistency.\n\n' +
+                    'Metadata files have been adjusted for consistency.\n\n' +
                     '**Scope:** `' + scope + '`\n' +
                     '**Types processed:** `${{ env.INCLUDED_TYPES || 'All whitelisted types' }}`\n\n' +
                     'Please review the changes in the latest commit.'
