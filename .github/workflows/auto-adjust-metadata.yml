@@ -1,0 +1,101 @@
+name: Auto adjust metadata
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**/*-meta.xml'  # Only trigger when metadata files are changed
+
+env:
+  NODE_VERSION: '20'
+  # Configure which metadata types to include (comma-separated, no spaces)
+  # Leave empty to process all whitelisted types
+  # Example: 'profile,permissionset' or 'profile,permissionset,customMetadata'
+  INCLUDED_TYPES: 'profile,permissionset'
+
+jobs:
+  adjust:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Required to push changes back to the PR branch
+      pull-requests: write  # Required to comment on PR
+    
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0  # Fetch all history for git operations
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Install plugin locally
+        run: |
+          npm link
+          sf plugins link .
+      
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+      
+      - name: Run metadata adjuster
+        id: format
+        run: |
+          echo "Running metadata adjuster..."
+          
+          # Build the command based on INCLUDED_TYPES
+          if [ -z "${{ env.INCLUDED_TYPES }}" ]; then
+            echo "Processing all whitelisted metadata types"
+            sf swift metadata adjust
+          else
+            echo "Processing metadata types: ${{ env.INCLUDED_TYPES }}"
+            sf swift metadata adjust --include ${{ env.INCLUDED_TYPES }}
+          fi
+          
+          # Check if any files were modified
+          if git diff --quiet; then
+            echo "modified=false" >> $GITHUB_OUTPUT
+            echo "No metadata files were modified"
+          else
+            echo "modified=true" >> $GITHUB_OUTPUT
+            echo "Metadata files were modified"
+          fi
+      
+      - name: Commit changes
+        if: steps.format.outputs.modified == 'true'
+        run: |
+          git add **/*-meta.xml
+          git commit -m "🤖 Auto-adjusted metadata files
+
+          Automatically adjusted by sf-swift metadata adjuster.
+          Types processed: ${{ env.INCLUDED_TYPES || 'all whitelisted types' }}"
+          
+          git push
+      
+      - name: Comment on PR
+        if: steps.format.outputs.modified == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🤖 **Metadata Auto-Adjustment Applied**\n\n' +
+                    'Your metadata files have been automatically adjusted for consistency.\n\n' +
+                    '**Types processed:** `${{ env.INCLUDED_TYPES || 'all whitelisted types' }}`\n\n' +
+                    'Please review the changes in the latest commit.'
+            })

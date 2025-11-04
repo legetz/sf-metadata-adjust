@@ -252,11 +252,49 @@ if [ $? -ne 0 ]; then
 fi
 ```
 
-### GitHub Actions
+### GitHub Actions - Automatic Adjustment in PR
+
+This plugin includes a ready-to-use GHA workflow that automatically adjusts metadata files on pull requests and commits the changes back to the PR branch.
+
+#### Setup
+
+1. The workflow file is already included: `.github/workflows/auto-adjust-metadata.yml`
+2. Configure which metadata types to process by editing the `INCLUDED_TYPES` environment variable:
+
 ```yaml
-- name: Format Metadata
-  run: sf swift metadata adjust --git-depth 10
+env:
+  # Leave empty to process all whitelisted types
+  INCLUDED_TYPES: 'profile,permissionset'
+  
+  # Or process more types
+  INCLUDED_TYPES: 'profile,permissionset,customMetadata,settings'
+  
+  # Or process all whitelisted types (leave empty)
+  INCLUDED_TYPES: ''
 ```
+
+#### Features
+
+- ✅ **Automatic Triggering** - Runs when metadata files change in PRs
+- 🤖 **Auto-Commit** - Commits formatting changes back to PR branch
+- 💬 **PR Comments** - Notifies about formatting status
+- 🎯 **Configurable** - Choose which metadata types to process
+- ⚡ **Efficient** - Only processes specified types
+
+#### Workflow Behavior
+
+1. **Triggered** when a PR is opened, synchronized, or reopened with metadata file changes
+2. **Formats** metadata files based on `INCLUDED_TYPES` configuration
+3. **Commits** changes automatically if any files were modified
+4. **Comments** on the PR with the formatting status
+
+#### Customization
+
+Edit `.github/workflows/auto-adjust-metadata.yml` to:
+- Change `INCLUDED_TYPES` to process different metadata types
+- Modify the commit message format
+- Adjust PR comment templates
+- Change trigger conditions
 
 ## Troubleshooting
 
