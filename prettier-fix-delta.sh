@@ -15,6 +15,13 @@ then
     exit 0
 fi
 
+# Function to run prettier on a list of files
+run_prettier() {
+    local file_list="$1"
+    local files_string=$(echo "$file_list" | tr '\n' ' ')
+    npx prettier --write --no-error-on-unmatched-pattern $files_string
+}
+
 APEX_DELTA_LIST=$(git diff --name-only HEAD HEAD~${COMMIT_AMOUNT} | grep -E 'cls$|trigger$')
 LIST_SIZE=$(echo "$APEX_DELTA_LIST" | wc -l | tr -d '[:space:]')
 
@@ -22,18 +29,17 @@ if [ -z "$APEX_DELTA_LIST" ]
 then 
     echo "No changes done for classes/triggers"
 else
-    # Iterate over 10 items per round in the list if list is larger than 30
-    if [ $LIST_SIZE -gt 30 ]
+    # Iterate 20 items per round in the list if list is larger than 20
+    if [ $LIST_SIZE -gt 20 ]
     then
-        echo "Run Prettier for $LIST_SIZE items in 15 item rounds"
-        for i in $(seq 1 15 $LIST_SIZE)
+        echo "Run Prettier for $LIST_SIZE items in 20 item rounds"
+        for i in $(seq 1 20 $LIST_SIZE)
         do
-            SUBLIST=$(echo "$APEX_DELTA_LIST" | head -n $i | tail -n 15)
-            npx prettier --write --no-error-on-unmatched-pattern "$SUBLIST"
+            SUBLIST=$(echo "$APEX_DELTA_LIST" | head -n $i | tail -n 20)
+            run_prettier "$SUBLIST"
         done
     else
         echo "Run Prettier for $LIST_SIZE items"
-        set -x
-        npx prettier --write --no-error-on-unmatched-pattern "$APEX_DELTA_LIST"
+        run_prettier "$APEX_DELTA_LIST"
     fi
 fi
