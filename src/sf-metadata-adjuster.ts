@@ -267,6 +267,31 @@ export class SfMetadataAdjuster {
     }
 
     /**
+     * Fix incorrect xmlns namespace for metadata files
+     * Corrects tooling API namespace to standard metadata namespace
+     */
+    private fixXmlNamespace(xmlObject: XmlObject): XmlObject {
+        // Check if object has attributes
+        if (xmlObject.$ && typeof xmlObject.$ === 'object') {
+            const attrs = xmlObject.$;
+            
+            // Check if xmlns contains the tooling metadata namespace
+            if (attrs.xmlns && typeof attrs.xmlns === 'string' && 
+                attrs.xmlns.includes('metadata.tooling')) {
+                // Replace with correct metadata namespace
+                attrs.xmlns = 'http://soap.sforce.com/2006/04/metadata';
+            }
+            
+            // Remove fqn attribute if it exists (not needed in metadata API)
+            if (attrs.fqn) {
+                delete attrs.fqn;
+            }
+        }
+        
+        return xmlObject;
+    }
+
+    /**
      * Prefix XML entities with markers before parsing to preserve them
      * This prevents the parser from converting entities to literals
      */
@@ -377,8 +402,11 @@ export class SfMetadataAdjuster {
             // Parse the prefixed XML
             const xmlObject = await this.parseXml(prefixedXml);
 
+            // Fix incorrect xmlns namespace (e.g., tooling API namespace)
+            const fixedObject = this.fixXmlNamespace(xmlObject);
+
             // Sort the elements using imported sorter with file path for rule-based sorting
-            const sortedObject = sortXmlElements(xmlObject, undefined, filePath);
+            const sortedObject = sortXmlElements(fixedObject, undefined, filePath);
 
             // Build the XML
             const sortedXml = this.buildXml(sortedObject, filePath, originalXml);
