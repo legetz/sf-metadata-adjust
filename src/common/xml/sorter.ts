@@ -35,6 +35,10 @@ export function sortArrayElements(arr: any[], arrayKey: string): any[] {
             valueA = a.field?.[0] || '';
             valueB = b.field?.[0] || '';
         }
+        else if (arrayKey === 'packageVersions') {
+            valueA = a.namespace?.[0] || '';
+            valueB = b.namespace?.[0] || '';
+        }
         // For other common Salesforce metadata arrays
         else if (arrayKey === 'customPermissions' ||
                  arrayKey === 'customMetadataTypeAccesses' || 
