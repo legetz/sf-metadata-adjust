@@ -314,6 +314,10 @@ export class SfMetadataAdjuster {
                         values: ['Picklist']
                     }
                 ]
+            },
+            {
+                elementName: 'description',
+                removeValues: ['']
             }
         ]
     };

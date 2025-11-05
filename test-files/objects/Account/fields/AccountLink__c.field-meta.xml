@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>AccountLink__c</fullName>
     <externalId>false</externalId>
+    <description></description>
     <formula>HYPERLINK(&quot;/&quot;&amp; Id,  Name  )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Account Link</label>
