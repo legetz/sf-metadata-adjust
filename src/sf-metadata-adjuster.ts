@@ -291,6 +291,25 @@ export class SfMetadataAdjuster {
     }
 
     /**
+     * Clean up CustomField metadata by removing default/false values
+     * Removes externalId element when set to false
+     */
+    private cleanupCustomField(xmlObject: XmlObject, filePath: string): XmlObject {
+        // Only process field-meta.xml files
+        if (!filePath.endsWith('field-meta.xml')) {
+            return xmlObject;
+        }
+
+        // Remove externalId if it's false
+        if (xmlObject.externalId && 
+            xmlObject.externalId[0] === 'false') {
+            delete xmlObject.externalId;
+        }
+
+        return xmlObject;
+    }
+
+    /**
      * Prefix XML entities with markers before parsing to preserve them
      * This prevents the parser from converting entities to literals
      */
@@ -404,8 +423,11 @@ export class SfMetadataAdjuster {
             // Fix incorrect xmlns namespace (e.g., tooling API namespace)
             const fixedObject = this.fixXmlNamespace(xmlObject);
 
+            // Clean up CustomField metadata (remove false externalId, etc.)
+            const cleanedObject = this.cleanupCustomField(fixedObject, filePath);
+
             // Sort the elements using imported sorter with file path for rule-based sorting
-            const sortedObject = sortXmlElements(fixedObject, undefined, filePath);
+            const sortedObject = sortXmlElements(cleanedObject, undefined, filePath);
 
             // Build the XML
             const sortedXml = this.buildXml(sortedObject, filePath, originalXml);
