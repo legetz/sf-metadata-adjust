@@ -291,19 +291,42 @@ export class SfMetadataAdjuster {
     }
 
     /**
-     * Clean up CustomField metadata by removing default/false values
-     * Removes externalId element when set to false
+     * Configuration for cleaning up metadata elements
+     * Defines which elements should be removed based on their values for each metadata type
      */
-    private cleanupCustomField(xmlObject: XmlObject, filePath: string): XmlObject {
-        // Only process field-meta.xml files
-        if (!filePath.endsWith('field-meta.xml')) {
-            return xmlObject;
+    private readonly elementCleanupRules: {
+        [metadataType: string]: {
+            [elementName: string]: string[];
+        };
+    } = {
+        'field-meta.xml': {
+            externalId: ['false']
+        }
+    };
+
+    /**
+     * Clean up metadata by removing elements with default/false values
+     * Uses configuration-driven approach for different metadata types
+     */
+    private cleanupElements(xmlObject: XmlObject, filePath: string): XmlObject {
+        // Find matching metadata type rule
+        const metadataType = Object.keys(this.elementCleanupRules).find(type => 
+            filePath.endsWith(type)
+        );
+
+        if (!metadataType) {
+            return xmlObject; // No cleanup rules for this type
         }
 
-        // Remove externalId if it's false
-        if (xmlObject.externalId && 
-            xmlObject.externalId[0] === 'false') {
-            delete xmlObject.externalId;
+        const rules = this.elementCleanupRules[metadataType];
+
+        // Apply cleanup rules for each element
+        for (const [elementName, removeValues] of Object.entries(rules)) {
+            if (xmlObject[elementName] && 
+                Array.isArray(xmlObject[elementName]) &&
+                removeValues.includes(xmlObject[elementName][0])) {
+                delete xmlObject[elementName];
+            }
         }
 
         return xmlObject;
@@ -423,8 +446,8 @@ export class SfMetadataAdjuster {
             // Fix incorrect xmlns namespace (e.g., tooling API namespace)
             const fixedObject = this.fixXmlNamespace(xmlObject);
 
-            // Clean up CustomField metadata (remove false externalId, etc.)
-            const cleanedObject = this.cleanupCustomField(fixedObject, filePath);
+            // Clean up metadata elements (remove default/false values based on rules)
+            const cleanedObject = this.cleanupElements(fixedObject, filePath);
 
             // Sort the elements using imported sorter with file path for rule-based sorting
             const sortedObject = sortXmlElements(cleanedObject, undefined, filePath);
