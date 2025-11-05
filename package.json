@@ -61,6 +61,8 @@
     "chai": "^6.2.0",
     "mocha": "^11.7.4",
     "nyc": "^17.1.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-apex": "^2.2.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },

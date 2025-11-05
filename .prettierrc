@@ -1,0 +1,19 @@
+{
+	"plugins": ["prettier-plugin-apex"],
+	"trailingComma": "none",
+	"printWidth": 120,
+	"useTabs": true,
+	"tabWidth": 2,
+	"endOfLine": "lf",
+	"apexInsertFinalNewline": false,
+	"overrides": [
+		{
+			"files": "**/lwc/**/*.html",
+			"options": { "parser": "lwc" }
+		},
+		{
+			"files": "*.{cmp,page,component}",
+			"options": { "parser": "html" }
+		}
+	]
+}

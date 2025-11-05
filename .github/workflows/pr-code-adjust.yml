@@ -1,0 +1,90 @@
+name: PR code adjust
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**/*.cls'  # Apex classes
+      - '**/*.trigger'  # Apex triggers
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  adjust:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Required to push changes back to the PR branch
+      pull-requests: write  # Required to comment on PR
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0  # Fetch all history for git operations
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+      
+      - name: Calculate PR commit count
+        id: pr-commits
+        run: |
+          PR_COMMITS=$(git rev-list --count origin/${{ github.base_ref }}..HEAD)
+          echo "amount=${PR_COMMITS}" >> $GITHUB_OUTPUT
+          echo "📊 PR has ${PR_COMMITS} commits"
+      
+      - name: Run Prettier
+        id: format
+        run: |
+          ./prettier-fix-delta.sh ${{ steps.pr-commits.outputs.amount }}
+          
+          # Check if any files were modified
+          if git diff --quiet; then
+            echo "modified=false" >> $GITHUB_OUTPUT
+            echo "file_count=0" >> $GITHUB_OUTPUT
+          else
+            echo "modified=true" >> $GITHUB_OUTPUT
+            # Count modified files
+            FILE_COUNT=$(git diff --name-only | wc -l | xargs)
+            echo "file_count=${FILE_COUNT}" >> $GITHUB_OUTPUT
+            echo "📝 Modified ${FILE_COUNT} file(s)"
+          fi
+      
+      - name: Commit changes
+        if: steps.format.outputs.modified == 'true'
+        run: |
+          git add **/*.cls **/*.trigger
+          git commit -m "🤖 Adjusted ${{ steps.format.outputs.file_count }} code files"
+          git push
+      
+      - name: Comment on PR
+        if: steps.format.outputs.modified == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fileCount = '${{ steps.format.outputs.file_count }}';
+            const scope = `Changed files only (${context.payload.pull_request.commits} commits)`
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🤖 **Adjusted ' + fileCount + ' code files**\n\n' +
+                    'Apex classes/triggers have been adjusted for consistency.\n\n' +
+                    '**Scope:** `' + scope + '`\n' +
+                    'Please review the changes in the latest commit.'
+            })
