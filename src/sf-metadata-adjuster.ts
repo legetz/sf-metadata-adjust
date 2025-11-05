@@ -292,16 +292,30 @@ export class SfMetadataAdjuster {
 
     /**
      * Configuration for cleaning up metadata elements
-     * Defines which elements should be removed based on their values for each metadata type
+     * Defines which elements should be removed based on their values and conditions for each metadata type
      */
     private readonly elementCleanupRules: {
         [metadataType: string]: {
-            [elementName: string]: string[];
-        };
+            elementName: string;
+            removeValues: string[];
+            conditions?: {
+                elementName: string;
+                values: string[];
+            }[];
+        }[];
     } = {
-        'field-meta.xml': {
-            externalId: ['false']
-        }
+        'field-meta.xml': [
+            {
+                elementName: 'externalId',
+                removeValues: ['false'],
+                conditions: [
+                    {
+                        elementName: 'type',
+                        values: ['Picklist']
+                    }
+                ]
+            }
+        ]
     };
 
     /**
@@ -321,12 +335,37 @@ export class SfMetadataAdjuster {
         const rules = this.elementCleanupRules[metadataType];
 
         // Apply cleanup rules for each element
-        for (const [elementName, removeValues] of Object.entries(rules)) {
-            if (xmlObject[elementName] && 
-                Array.isArray(xmlObject[elementName]) &&
-                removeValues.includes(xmlObject[elementName][0])) {
-                delete xmlObject[elementName];
+        for (const rule of rules) {
+            const { elementName, removeValues, conditions } = rule;
+
+            // Check if element exists and has a value that should be removed
+            if (!xmlObject[elementName] || 
+                !Array.isArray(xmlObject[elementName]) ||
+                !removeValues.includes(xmlObject[elementName][0])) {
+                continue;
             }
+
+            // Check conditions if specified
+            if (conditions) {
+                let allConditionsMet = true;
+
+                for (const condition of conditions) {
+                    const conditionElement = xmlObject[condition.elementName];
+                    if (!conditionElement || 
+                        !Array.isArray(conditionElement) ||
+                        !condition.values.includes(conditionElement[0])) {
+                        allConditionsMet = false;
+                        break;
+                    }
+                }
+
+                if (!allConditionsMet) {
+                    continue; // Don't remove if conditions aren't met
+                }
+            }
+
+            // All conditions met, remove the element
+            delete xmlObject[elementName];
         }
 
         return xmlObject;
