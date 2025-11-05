@@ -78,8 +78,9 @@ export function sortArrayElements(arr: any[], arrayKey: string): any[] {
  * @param obj - The object to sort
  * @param parentKey - The parent key for context-aware sorting
  * @param filePath - Optional file path to apply file-specific sorting rules
+ * @param parentObj - Optional parent object to check for context (e.g., sorted flag)
  */
-export function sortXmlElements(obj: any, parentKey?: string, filePath?: string): any {
+export function sortXmlElements(obj: any, parentKey?: string, filePath?: string, parentObj?: any): any {
     if (obj === null || obj === undefined) {
         return obj;
     }
@@ -88,17 +89,25 @@ export function sortXmlElements(obj: any, parentKey?: string, filePath?: string)
         // Special handling for classAccesses - sort by apexClass
         if (parentKey === 'classAccesses') {
             const sorted = sortClassAccesses(obj);
-            return sorted.map(item => sortXmlElements(item, undefined, filePath));
+            return sorted.map(item => sortXmlElements(item, undefined, filePath, obj));
+        }
+        
+        // Skip sorting for 'value' elements inside valueSetDefinition when sorted=false
+        // Check if parent object has sorted element set to false
+        if (parentKey === 'value' && parentObj && parentObj.sorted && 
+            Array.isArray(parentObj.sorted) && parentObj.sorted[0] === 'false') {
+            // Don't sort the array, but still recursively process each item
+            return obj.map(item => sortXmlElements(item, undefined, filePath, obj));
         }
         
         // Handle other arrays with appropriate sorting
         if (parentKey && obj.length > 0 && typeof obj[0] === 'object') {
             const sorted = sortArrayElements(obj, parentKey);
-            return sorted.map(item => sortXmlElements(item, undefined, filePath));
+            return sorted.map(item => sortXmlElements(item, undefined, filePath, obj));
         }
 
         // For other arrays, just recursively sort elements
-        return obj.map(item => sortXmlElements(item, undefined, filePath));
+        return obj.map(item => sortXmlElements(item, undefined, filePath, obj));
     }
 
     if (typeof obj === 'object') {
@@ -111,9 +120,9 @@ export function sortXmlElements(obj: any, parentKey?: string, filePath?: string)
         const keys = Object.keys(obj);
         const sortedKeys = sortKeysWithPriority(keys, sortingRule?.priorityKeys);
 
-        // Rebuild object with sorted keys
+        // Rebuild object with sorted keys, passing current object as parent
         for (const key of sortedKeys) {
-            sortedObj[key] = sortXmlElements(obj[key], key, filePath);
+            sortedObj[key] = sortXmlElements(obj[key], key, filePath, obj);
         }
 
         return sortedObj;
