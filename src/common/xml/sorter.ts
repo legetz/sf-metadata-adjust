@@ -98,8 +98,8 @@ export function sortXmlElements(obj: any, parentKey?: string, filePath?: string,
             return obj.map(item => sortXmlElements(item, undefined, filePath, obj));
         }
         
-        // Skip sorting for filterItems - order matters for booleanFilter expressions
-        if (parentKey === 'filterItems') {
+        // Skip sorting for filterItems and valueSettings
+        if (parentKey === 'filterItems' || parentKey === 'valueSettings') {
             // Don't sort the array, but still recursively process each item
             return obj.map(item => sortXmlElements(item, undefined, filePath, obj));
         }
