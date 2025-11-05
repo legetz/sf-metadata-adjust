@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>EmployeeAmount__c</fullName>
+    <label>Number of Employees</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>&lt;5</fullName>
+                <default>false</default>
+                <label>&lt;5</label>
+            </value>
+            <value>
+                <fullName>5-50</fullName>
+                <default>false</default>
+                <label>5-50</label>
+            </value>
+            <value>
+                <fullName>51-100</fullName>
+                <default>false</default>
+                <label>51-100</label>
+            </value>
+            <value>
+                <fullName>101-500</fullName>
+                <default>false</default>
+                <label>101-500</label>
+            </value>
+            <value>
+                <fullName>&gt;500</fullName>
+                <default>false</default>
+                <label>&gt;500</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
