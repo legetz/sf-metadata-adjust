@@ -136,3 +136,5 @@ temp*.xml
 
 # SF Metadata Adjuster backups
 .backup-*
+
+.sfdx
