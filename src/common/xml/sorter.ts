@@ -92,10 +92,14 @@ export function sortXmlElements(obj: any, parentKey?: string, filePath?: string,
             return sorted.map(item => sortXmlElements(item, undefined, filePath, obj));
         }
         
-        // Skip sorting for 'value' elements inside valueSetDefinition when sorted=false
-        // Check if parent object has sorted element set to false
-        if (parentKey === 'value' && parentObj && parentObj.sorted && 
-            Array.isArray(parentObj.sorted) && parentObj.sorted[0] === 'false') {
+        // Skip sorting for 'value' elements inside valueSetDefinition
+        if (parentKey === 'value' && parentObj && parentObj.sorted && Array.isArray(parentObj.sorted)) {
+            // Don't sort the array, but still recursively process each item
+            return obj.map(item => sortXmlElements(item, undefined, filePath, obj));
+        }
+        
+        // Skip sorting for filterItems - order matters for booleanFilter expressions
+        if (parentKey === 'filterItems') {
             // Don't sort the array, but still recursively process each item
             return obj.map(item => sortXmlElements(item, undefined, filePath, obj));
         }
