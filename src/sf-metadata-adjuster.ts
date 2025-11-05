@@ -462,6 +462,9 @@ export class SfMetadataAdjuster {
         // Post-process to restore XML entity encoding for apostrophes
         xmlOutput = this.restoreXmlEntities(xmlOutput);
         
+        // Convert self-closing tags to full opening/closing tags (e.g., <value/> to <value></value>)
+        xmlOutput = xmlOutput.replace(/<(\w+)([^>]*)\/>/g, '<$1$2></$1>');
+        
         // Ensure there's an empty line before EOF
         if (!xmlOutput.endsWith('\n')) {
             xmlOutput += '\n';
