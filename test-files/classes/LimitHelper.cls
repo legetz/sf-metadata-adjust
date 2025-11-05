@@ -4,6 +4,8 @@
 public class LimitHelper {
 
     public static Integer getCalloutsRemaining(){
-	return Limits.getLimitCallouts() - Limits.getCallouts();
+	
+	
+return Limits.getLimitCallouts() - Limits.getCallouts();
 	}
 }
