@@ -164,7 +164,7 @@ sf swift metadata adjust --exclude profile
 sf swift metadata adjust --exclude ""
 
 # Custom exclusions
-sf swift metadata adjust --exclude reportType,customObject
+sf swift metadata adjust --exclude labels,field
 ```
 
 These files are counted in the summary statistics but never modified.
@@ -178,7 +178,6 @@ By default, the tool uses a **safety whitelist** to only process metadata types 
 The following metadata types are whitelisted and will be processed by default:
 
 - `cls-meta.xml` - Apex classes
-- `customObject-meta.xml` -  Custom Objects
 - `field-meta.xml` - Fields
 - `labels-meta.xml` - Labels
 - `object-meta.xml` - Standard Objects

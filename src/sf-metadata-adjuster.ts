@@ -38,7 +38,6 @@ export class SfMetadataAdjuster {
     // Only these types will be processed unless --all flag is used
     private readonly allowedMetadataTypes: string[] = [
         'cls-meta.xml',
-        'customObject-meta.xml',
         'field-meta.xml',
         'labels-meta.xml',
         'object-meta.xml',
