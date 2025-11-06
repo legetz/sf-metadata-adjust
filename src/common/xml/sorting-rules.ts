@@ -22,7 +22,7 @@ export const DEFAULT_SORTING_RULES: SortingRule[] = [
     },
     {
         filePattern: 'object-meta.xml',
-        priorityKeys: ['fullName', 'label'],
+        // No priority keys - use simple a-z sorting for CustomObject
         caseSensitive: true
     },
     {
