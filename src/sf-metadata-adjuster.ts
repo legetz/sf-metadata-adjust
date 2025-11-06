@@ -477,9 +477,9 @@ export class SfMetadataAdjuster {
      * Process a single XML file
      */
     private async processFile(filePath: string): Promise<boolean> {
+        const relativePath = path.relative(this.folderPath, filePath);
+        
         try {
-            const relativePath = path.relative(this.folderPath, filePath);
-            
             // Read the file
             const originalXml = await this.readXmlFile(filePath);
             
@@ -487,7 +487,15 @@ export class SfMetadataAdjuster {
             const prefixedXml = this.prefixXmlEntities(originalXml);
             
             // Parse the prefixed XML
-            const xmlObject = await this.parseXml(prefixedXml);
+            let xmlObject;
+            try {
+                xmlObject = await this.parseXml(prefixedXml);
+            } catch (parseError) {
+                // XML is not valid - skip this file with a warning
+                console.log(`⚠️  Skipped (invalid XML): ${relativePath}`);
+                this.stats.skipped++;
+                return false;
+            }
 
             // Fix incorrect xmlns namespace (e.g., tooling API namespace)
             const fixedObject = this.fixXmlNamespace(xmlObject);
@@ -523,7 +531,7 @@ export class SfMetadataAdjuster {
             
             return true;
         } catch (error) {
-            console.error(`❌ Error processing ${path.relative(this.folderPath, filePath)}: ${error}`);
+            console.error(`❌ Error processing ${relativePath}: ${error}`);
             this.stats.errors++;
             return false;
         }
