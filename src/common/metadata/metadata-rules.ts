@@ -10,6 +10,7 @@ export const ALLOWED_METADATA_TYPES: string[] = [
     'cls-meta.xml',
     'field-meta.xml',
     'labels-meta.xml',
+    'listView-meta.xml',
     'object-meta.xml',
     'permissionset-meta.xml',
     'profile-meta.xml',
