@@ -7,6 +7,8 @@ export interface SortingRule {
     filePattern: string;
     /** Keys that should be sorted to the top in order */
     priorityKeys?: string[];
+    /** Array keys that should NOT be sorted (preserve original order) */
+    unsortedArrays?: string[];
 }
 
 /**
@@ -16,6 +18,10 @@ export const DEFAULT_SORTING_RULES: SortingRule[] = [
     {
         filePattern: 'field-meta.xml',
         priorityKeys: ['fullName']
+    },
+    {
+        filePattern: 'FileUploadAndDownloadSecurity.settings-meta.xml',
+        unsortedArrays: ['dispositions']
     },
     {
         filePattern: 'listView-meta.xml',

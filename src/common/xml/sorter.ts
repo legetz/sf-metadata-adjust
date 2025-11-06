@@ -86,6 +86,15 @@ export function sortXmlElements(obj: any, parentKey?: string, filePath?: string,
     }
 
     if (Array.isArray(obj)) {
+        // Get sorting rule for this file if available
+        const sortingRule = getSortingRule(filePath);
+        
+        // Check if this array should remain unsorted
+        if (parentKey && sortingRule?.unsortedArrays?.includes(parentKey)) {
+            // Don't sort the array, but still recursively process each item
+            return obj.map(item => sortXmlElements(item, undefined, filePath, obj));
+        }
+        
         // Special handling for classAccesses - sort by apexClass
         if (parentKey === 'classAccesses') {
             const sorted = sortClassAccesses(obj);
