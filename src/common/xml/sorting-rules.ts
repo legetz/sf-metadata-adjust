@@ -21,16 +21,6 @@ export const DEFAULT_SORTING_RULES: SortingRule[] = [
         caseSensitive: true
     },
     {
-        filePattern: 'object-meta.xml',
-        // No priority keys - use simple a-z sorting for CustomObject
-        caseSensitive: true
-    },
-    {
-        filePattern: 'permissionset-meta.xml',
-        priorityKeys: ['fullName', 'label', 'description'],
-        caseSensitive: true
-    },
-    {
         filePattern: 'profile-meta.xml',
         priorityKeys: ['fullName', 'custom'],
         caseSensitive: true
