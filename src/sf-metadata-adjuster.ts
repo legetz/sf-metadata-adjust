@@ -4,6 +4,12 @@ import * as xml2js from 'xml2js';
 import { sortXmlElements } from './common/xml/sorter.js';
 import { createFileBackup } from './common/helper/backup.js';
 import { hashString } from './common/helper/string.js';
+import { 
+    ALLOWED_METADATA_TYPES, 
+    DEFAULT_EXCLUSIONS, 
+    ALWAYS_EXCLUDED, 
+    ELEMENT_CLEANUP_RULES
+} from './common/metadata/metadata-rules.js';
 
 interface XmlObject {
     [key: string]: any;
@@ -33,32 +39,6 @@ export class SfMetadataAdjuster {
         files: [],
         unchangedFiles: []
     };
-    
-    // Whitelist of allowed metadata file types for safe processing
-    // Only these types will be processed unless --all flag is used
-    private readonly allowedMetadataTypes: string[] = [
-        'cls-meta.xml',
-        'field-meta.xml',
-        'labels-meta.xml',
-        'object-meta.xml',
-        'permissionset-meta.xml',
-        'profile-meta.xml',
-        'settings-meta.xml',
-        'trigger-meta.xml',
-        'validationRule-meta.xml',
-    ];
-    
-    // Default exclusions (used when --exclude is not specified)
-    private readonly defaultExclusions: string[] = [
-        'reportType-meta.xml',
-        'flexipage-meta.xml',
-        'layout-meta.xml'
-    ];
-
-    // Always excluded types that cannot be included (due to special handling requirements)
-    private readonly alwaysExcluded: string[] = [
-        'flow-meta.xml'
-    ];
 
     constructor(folderPath: string, includeTypes: string[] = [], excludeTypes: string[] = [], allowAll: boolean = false) {
         this.folderPath = folderPath;
@@ -74,7 +54,7 @@ export class SfMetadataAdjuster {
         
         // If no exclude types specified, use defaults; otherwise use the provided exclusions
         if (excludeTypes.length === 0) {
-            this.excludeTypes = [...this.defaultExclusions];
+            this.excludeTypes = [...DEFAULT_EXCLUSIONS];
         } else {
             this.excludeTypes = excludeTypes.map(t => {
                 // Normalize type names - ensure they end with -meta.xml
@@ -104,7 +84,7 @@ export class SfMetadataAdjuster {
         const nonWhitelistedTypes: string[] = [];
         
         for (const includeType of this.includeTypes) {
-            const isWhitelisted = this.allowedMetadataTypes.some(allowedType => 
+            const isWhitelisted = ALLOWED_METADATA_TYPES.some(allowedType => 
                 includeType.endsWith(allowedType)
             );
             
@@ -115,7 +95,7 @@ export class SfMetadataAdjuster {
 
         if (nonWhitelistedTypes.length > 0) {
             const nonWhitelistedList = nonWhitelistedTypes.join(', ');
-            const allowedList = this.allowedMetadataTypes.join(', ');
+            const allowedList = ALLOWED_METADATA_TYPES.join(', ');
             throw new Error(
                 `Invalid configuration: The following types are not in the allowed whitelist: ${nonWhitelistedList}.\n` +
                 `Allowed types: ${allowedList}\n` +
@@ -135,7 +115,7 @@ export class SfMetadataAdjuster {
         const conflictingTypes: string[] = [];
         
         for (const includeType of this.includeTypes) {
-            for (const alwaysExcludedType of this.alwaysExcluded) {
+            for (const alwaysExcludedType of ALWAYS_EXCLUDED) {
                 if (includeType.endsWith(alwaysExcludedType)) {
                     conflictingTypes.push(includeType);
                     break;
@@ -145,7 +125,7 @@ export class SfMetadataAdjuster {
 
         if (conflictingTypes.length > 0) {
             const conflictList = conflictingTypes.join(', ');
-            const alwaysExcludedList = this.alwaysExcluded.join(', ');
+            const alwaysExcludedList = ALWAYS_EXCLUDED.join(', ');
             throw new Error(
                 `Invalid configuration: The following types cannot be included as they require special handling: ${conflictList}. ` +
                 `Always excluded types: ${alwaysExcludedList}`
@@ -160,7 +140,7 @@ export class SfMetadataAdjuster {
         const fileName = path.basename(filePath);
         
         // Always exclude types that require special handling
-        const isAlwaysExcluded = this.alwaysExcluded.some(excludePattern => fileName.endsWith(excludePattern));
+        const isAlwaysExcluded = ALWAYS_EXCLUDED.some(excludePattern => fileName.endsWith(excludePattern));
         if (isAlwaysExcluded) {
             return true;
         }
@@ -182,7 +162,7 @@ export class SfMetadataAdjuster {
         
         // If no include types specified and --all is NOT used, check against whitelist
         if (!this.allowAll) {
-            return this.allowedMetadataTypes.some(allowedType => fileName.endsWith(allowedType));
+            return ALLOWED_METADATA_TYPES.some(allowedType => fileName.endsWith(allowedType));
         }
         
         // If --all is used and no specific includes, accept all files (except excludes)
@@ -291,44 +271,12 @@ export class SfMetadataAdjuster {
     }
 
     /**
-     * Configuration for cleaning up metadata elements
-     * Defines which elements should be removed based on their values and conditions for each metadata type
-     */
-    private readonly elementCleanupRules: {
-        [metadataType: string]: {
-            elementName: string;
-            removeValues: string[];
-            conditions?: {
-                elementName: string;
-                values: string[];
-            }[];
-        }[];
-    } = {
-        'field-meta.xml': [
-            {
-                elementName: 'externalId',
-                removeValues: ['false'],
-                conditions: [
-                    {
-                        elementName: 'type',
-                        values: ['Picklist']
-                    }
-                ]
-            },
-            {
-                elementName: 'description',
-                removeValues: ['']
-            }
-        ]
-    };
-
-    /**
      * Clean up metadata by removing elements with default/false values
      * Uses configuration-driven approach for different metadata types
      */
     private cleanupElements(xmlObject: XmlObject, filePath: string): XmlObject {
         // Find matching metadata type rule
-        const metadataType = Object.keys(this.elementCleanupRules).find(type => 
+        const metadataType = Object.keys(ELEMENT_CLEANUP_RULES).find(type => 
             filePath.endsWith(type)
         );
 
@@ -336,7 +284,7 @@ export class SfMetadataAdjuster {
             return xmlObject; // No cleanup rules for this type
         }
 
-        const rules = this.elementCleanupRules[metadataType];
+        const rules = ELEMENT_CLEANUP_RULES[metadataType];
 
         // Apply cleanup rules for each element
         for (const rule of rules) {
