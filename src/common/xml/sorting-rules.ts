@@ -24,7 +24,7 @@ export const DEFAULT_SORTING_RULES: SortingRule[] = [
         unsortedArrays: ['dispositions']
     },
     {
-        filePattern: 'listView-meta.xml',
+        filePattern: 'validationRule-meta.xml',
         priorityKeys: ['fullName']
     },
     {
