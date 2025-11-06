@@ -18,10 +18,6 @@ export const DEFAULT_SORTING_RULES: SortingRule[] = [
         priorityKeys: ['fullName']
     },
     {
-        filePattern: 'profile-meta.xml',
-        priorityKeys: ['fullName', 'custom']
-    },
-    {
         filePattern: 'listView-meta.xml',
         priorityKeys: ['fullName']
     },
