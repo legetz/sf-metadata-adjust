@@ -7,8 +7,6 @@ export interface SortingRule {
     filePattern: string;
     /** Keys that should be sorted to the top in order */
     priorityKeys?: string[];
-    /** Whether to use case-sensitive sorting */
-    caseSensitive?: boolean;
 }
 
 /**
@@ -17,23 +15,19 @@ export interface SortingRule {
 export const DEFAULT_SORTING_RULES: SortingRule[] = [
     {
         filePattern: 'field-meta.xml',
-        priorityKeys: ['fullName'],
-        caseSensitive: true
+        priorityKeys: ['fullName']
     },
     {
         filePattern: 'profile-meta.xml',
-        priorityKeys: ['fullName', 'custom'],
-        caseSensitive: true
+        priorityKeys: ['fullName', 'custom']
     },
     {
         filePattern: 'listView-meta.xml',
-        priorityKeys: ['fullName'],
-        caseSensitive: true
+        priorityKeys: ['fullName']
     },
     {
         filePattern: 'labels-meta.xml',
-        priorityKeys: ['fullName'],
-        caseSensitive: true
+        priorityKeys: ['fullName']
     },
 ];
 
