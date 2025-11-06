@@ -30,6 +30,7 @@ export class SfMetadataAdjuster {
     private includeTypes: string[];
     private excludeTypes: string[];
     private allowAll: boolean;
+    private specificFiles: string[] | null = null;
     private stats: ProcessingStats = {
         processed: 0,
         unchanged: 0,
@@ -486,65 +487,21 @@ export class SfMetadataAdjuster {
     }
 
     /**
-     * Main process: find and adjust all metadata files
+     * Set specific files to process instead of scanning the directory
+     * @param files - Array of file paths to process
      */
-    async process(createBackup: boolean = true): Promise<void> {
-        try {
-            console.log(`🔍 Scanning for *-meta.xml files in: ${this.folderPath}`);
-            
-            const metadataFiles = this.findMetadataFiles(this.folderPath);
-            
-            if (metadataFiles.length === 0) {
-                console.log('ℹ️  No *-meta.xml files found in the specified directory');
-                return;
-            }
-
-            console.log(`📋 Found ${metadataFiles.length} metadata files`);
-
-            // Create backup if requested
-            if (createBackup) {
-                createFileBackup(metadataFiles, this.folderPath);
-            }
-
-            console.log('🔤 Processing metadata files...\n');
-
-            // Process each file
-            for (const file of metadataFiles) {
-                await this.processFile(file);
-            }
-
-            // Display summary
-            this.displaySummary();
-
-        } catch (error) {
-            console.error('❌ Error processing metadata files:', error);
-            process.exit(1);
-        }
+    setFiles(files: string[]): void {
+        this.specificFiles = files;
     }
 
     /**
-     * Process specific metadata files (for git-depth functionality)
+     * Get the list of files to process
+     * Either returns specific files (if set) or scans the directory
      */
-    async processSpecificFiles(files: string[], createBackup: boolean = true): Promise<void> {
-        try {
-            // Reset stats for this specific processing
-            this.stats = {
-                processed: 0,
-                unchanged: 0,
-                modified: 0,
-                skipped: 0,
-                errors: 0,
-                files: [],
-                unchangedFiles: []
-            };
-
-            if (files.length === 0) {
-                console.log('ℹ️  No files specified for processing');
-                return;
-            }
-
-            // Filter to only include files that exist and are *-meta.xml files
-            const validFiles = files.filter(file => {
+    private getFilesToProcess(): string[] {
+        if (this.specificFiles !== null) {
+            // Filter specific files
+            return this.specificFiles.filter(file => {
                 if (!fs.existsSync(file)) {
                     console.log(`⚠️  File not found, skipping: ${path.relative(this.folderPath, file)}`);
                     return false;
@@ -565,23 +522,57 @@ export class SfMetadataAdjuster {
                 }
                 return true;
             });
+        } else {
+            // Scan directory
+            return this.findMetadataFiles(this.folderPath);
+        }
+    }
 
-            if (validFiles.length === 0) {
-                console.log('ℹ️  No valid metadata files to process');
+    /**
+     * Main process: find and adjust all metadata files
+     */
+    async process(createBackup: boolean = true): Promise<void> {
+        try {
+            // Reset stats
+            this.stats = {
+                processed: 0,
+                unchanged: 0,
+                modified: 0,
+                skipped: 0,
+                errors: 0,
+                files: [],
+                unchangedFiles: []
+            };
+
+            if (this.specificFiles !== null) {
+                if (this.specificFiles.length === 0) {
+                    console.log('ℹ️  No files specified for processing');
+                    return;
+                }
+            } else {
+                console.log(`🔍 Scanning for *-meta.xml files in: ${this.folderPath}`);
+            }
+            
+            const metadataFiles = this.getFilesToProcess();
+            
+            if (metadataFiles.length === 0) {
+                if (this.specificFiles !== null) {
+                    console.log('ℹ️  No valid metadata files to process');
+                } else {
+                    console.log('ℹ️  No *-meta.xml files found in the specified directory');
+                }
                 return;
             }
 
-            console.log(`📋 Processing ${validFiles.length} specific metadata files`);
+            console.log(`📋 ${this.specificFiles !== null ? 'Processing' : 'Found'} ${metadataFiles.length} metadata files`);
 
             // Create backup if requested
             if (createBackup) {
-                createFileBackup(validFiles, this.folderPath);
+                createFileBackup(metadataFiles, this.folderPath);
             }
 
-            console.log('🔤 Processing specified metadata files...\n');
-
             // Process each file
-            for (const file of validFiles) {
+            for (const file of metadataFiles) {
                 await this.processFile(file);
             }
 
@@ -589,7 +580,7 @@ export class SfMetadataAdjuster {
             this.displaySummary();
 
         } catch (error) {
-            console.error('❌ Error processing specific metadata files:', error);
+            console.error('❌ Error processing metadata files:', error);
             process.exit(1);
         }
     }

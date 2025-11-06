@@ -135,7 +135,9 @@ export default class MetadataAdjust extends SfCommand<void> {
     }
 
     try {
-      // If git-depth is specified, process only changed files
+      const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes, flags.all);
+      
+      // If git-depth is specified, set specific files to process
       if (flags["git-depth"] > 0) {
         const changedFiles = this.getChangedMetadataFiles(flags["git-depth"], targetDir);
 
@@ -148,13 +150,11 @@ export default class MetadataAdjust extends SfCommand<void> {
           return;
         }
 
-        const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes, flags.all);
-        await adjuster.processSpecificFiles(changedFiles, flags.backup);
-      } else {
-        // Process all files in directory
-        const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes, flags.all);
-        await adjuster.process(flags.backup);
+        adjuster.setFiles(changedFiles);
       }
+      
+      // Process files (either all or specific based on setFiles)
+      await adjuster.process(flags.backup);
       
       // Calculate and display elapsed time
       const endTime = Date.now();
