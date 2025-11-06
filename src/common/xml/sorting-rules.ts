@@ -28,6 +28,10 @@ export const DEFAULT_SORTING_RULES: SortingRule[] = [
         priorityKeys: ['fullName']
     },
     {
+        filePattern: 'listView-meta.xml',
+        priorityKeys: ['fullName']
+    },
+    {
         filePattern: 'labels-meta.xml',
         priorityKeys: ['fullName']
     },
