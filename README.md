@@ -24,24 +24,8 @@ A fast and powerful Salesforce CLI plugin with utilities for metadata formatting
 sf plugins install sf-swift
 ```
 
-### Standalone Tool
-
-```bash
-# Clone and install
-git clone git@github.com:legetz/sf-swift.git
-cd sf-swift
-npm install
-npm run build
-```
-
-Optionally connect to SF CLI:
-```bash
-# Install from local directory (for development)
-sf plugins install .
-
-# Or link for development
-sf plugins link .
-```
+- Make sure that you have SF CLI: `sf -v`
+- Install SF CLI if missing or outdated: `npm install @salesforce/cli -g`
 
 ## Usage
 
@@ -129,23 +113,6 @@ sf swift metadata adjust --help
 ⏱️  Completed in 3.10 seconds
 ```
 
-### Direct Usage
-
-```bash
-# Process all *-meta.xml files in a folder
-npm run sf-adjust ./force-app/main/default
-
-# Process only permissionset
-npm run sf-adjust ./src/main/default -- --include permissionset
-
-# Using compiled version
-npm run build
-npm run sf-adjust:prod ./force-app
-
-# Direct usage example
-npx ts-node src/commands/metadata/adjust.ts ./src/main/default -- --include profile,permissionset --git-depth 10
-```
-
 ## Exclude Filter
 
 By default, the tool excludes certain Salesforce metadata file types that should not be sorted:
@@ -180,6 +147,7 @@ The following metadata types are whitelisted and will be processed by default:
 - `cls-meta.xml` - Apex classes
 - `field-meta.xml` - Fields
 - `labels-meta.xml` - Labels
+- `listView-meta.xml` - List views
 - `object-meta.xml` - Standard Objects
 - `permissionset-meta.xml` - Permission Sets
 - `profile-meta.xml` - User Profiles

@@ -19,12 +19,8 @@
     "/messages"
   ],
   "scripts": {
-    "make": "npm run clean && npm run build",
     "build": "tsc",
-    "prepack": "npm run build",
-    "sf-adjust": "ts-node src/sf-metadata-adjuster.ts",
-    "sf-adjust:prod": "node dist/sf-metadata-adjuster.js",
-    "sf-metadata-adjust": "ts-node src/commands/metadata/adjust.ts",
+    "prepack": "npm run clean && npm run build",
     "plugin:install": "sf plugins install .",
     "clean": "rm -rf dist",
     "test": "mocha",
