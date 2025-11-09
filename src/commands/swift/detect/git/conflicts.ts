@@ -3,6 +3,7 @@ import { Messages } from "@salesforce/core";
 import { Args } from "@oclif/core";
 import * as fs from "fs";
 import * as path from "path";
+import { findFilesBySuffix } from "../../../../common/helper/file-finder.js";
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages("sf-swift", "detect.git.conflicts");
@@ -11,39 +12,6 @@ export type ConflictResult = {
   count: number;
   conflictFiles: string[];
 };
-
-/**
- * Recursively searches for .rej files in the given directory
- * @param dir - The directory to search in
- * @returns Array of absolute paths to .rej files
- */
-function findRejFiles(dir: string): string[] {
-  const rejFiles: string[] = [];
-
-  try {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-
-      if (entry.isDirectory()) {
-        // Skip .git and node_modules directories for performance
-        if (entry.name !== ".git" && entry.name !== "node_modules") {
-          rejFiles.push(...findRejFiles(fullPath));
-        }
-      } else if (entry.isFile() && entry.name.endsWith(".rej")) {
-        rejFiles.push(fullPath);
-      }
-    }
-  } catch (error) {
-    // Ignore permission errors and continue with other directories
-    if ((error as NodeJS.ErrnoException).code !== "EACCES" && (error as NodeJS.ErrnoException).code !== "EPERM") {
-      throw error;
-    }
-  }
-
-  return rejFiles;
-}
 
 export default class DetectGitConflicts extends SfCommand<ConflictResult> {
   public static readonly description = messages.getMessage("description");
@@ -85,7 +53,7 @@ export default class DetectGitConflicts extends SfCommand<ConflictResult> {
     this.log(`🔍 Scan GIT conflict (.rej) files in ${targetDir}`);
 
     try {
-      const conflictFiles = findRejFiles(targetDir);
+  const conflictFiles = findFilesBySuffix(targetDir, ".rej");
       const conflictCount = conflictFiles.length;
       const elapsedTime = Date.now() - startTime;
 
