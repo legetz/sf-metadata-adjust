@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as xml2js from 'xml2js';
 import { sortXmlElements } from './common/xml/sorter.js';
 import { createFileBackup } from './common/helper/backup.js';
 import { hashString } from './common/helper/string.js';
@@ -10,10 +9,12 @@ import {
     ALWAYS_EXCLUDED, 
     ELEMENT_CLEANUP_RULES
 } from './common/metadata/metadata-rules.js';
-
-interface XmlObject {
-    [key: string]: any;
-}
+import { 
+    parseMetadataXml,
+    prefixXmlEntities,
+    buildMetadataXml,
+    XmlObject
+} from './common/xml/xml-helpers.js';
 
 interface ProcessingStats {
     processed: number;
@@ -222,31 +223,6 @@ export class SfMetadataAdjuster {
     }
 
     /**
-     * Parse XML string to object
-     */
-    private async parseXml(xmlString: string): Promise<XmlObject> {
-        const parser = new xml2js.Parser({
-            preserveChildrenOrder: false,
-            explicitChildren: false,
-            explicitArray: true, // Keep arrays as arrays for consistent handling
-            mergeAttrs: false,
-            explicitRoot: false,
-            trim: true,
-            normalize: false, // Don't normalize whitespace
-            normalizeTags: false, // Don't normalize tag names
-            attrkey: '$', // Use standard attribute key
-            charkey: '_', // Use standard character data key
-            charsAsChildren: false
-        });
-        
-        try {
-            return await parser.parseStringPromise(xmlString);
-        } catch (error) {
-            throw new Error(`Failed to parse XML: ${error}`);
-        }
-    }
-
-    /**
      * Fix incorrect xmlns namespace for metadata files
      * Corrects tooling API namespace to standard metadata namespace
      */
@@ -325,104 +301,6 @@ export class SfMetadataAdjuster {
     }
 
     /**
-     * Prefix XML entities with markers before parsing to preserve them
-     * This prevents the parser from converting entities to literals
-     */
-    private prefixXmlEntities(xmlString: string): string {
-        const entityMarker = '___ENTITY_MARKER___';
-        let result = xmlString;
-        
-        // Mark all XML entities so they survive the parse/build cycle
-        result = result.replace(/&apos;/g, `${entityMarker}apos;`);
-        result = result.replace(/&quot;/g, `${entityMarker}quot;`);
-        result = result.replace(/&amp;/g, `${entityMarker}amp;`);
-        result = result.replace(/&lt;/g, `${entityMarker}lt;`);
-        result = result.replace(/&gt;/g, `${entityMarker}gt;`);
-        
-        return result;
-    }
-
-    /**
-     * Restore XML entity encoding for special characters
-     * This fixes the issue where entities become literals during parse/build cycle
-     */
-    private restoreXmlEntities(xmlString: string): string {
-        const entityMarker = '___ENTITY_MARKER___';
-        let result = xmlString;
-        
-        // First, restore the marked entities back to proper XML entities
-        result = result.replace(new RegExp(`${entityMarker}amp;`, 'g'), '&amp;');
-        result = result.replace(new RegExp(`${entityMarker}lt;`, 'g'), '&lt;');
-        result = result.replace(new RegExp(`${entityMarker}gt;`, 'g'), '&gt;');
-        result = result.replace(new RegExp(`${entityMarker}quot;`, 'g'), '&quot;');
-        result = result.replace(new RegExp(`${entityMarker}apos;`, 'g'), '&apos;');
-        
-        return result;
-    }
-
-    /**
-     * Extract the root element name directly from the raw XML string
-     * This avoids issues with parser configuration affecting object keys
-     */
-    private extractRootElementName(xmlString: string): string {
-        // Match the first opening tag after XML declaration/comments
-        const rootElementMatch = xmlString.match(/<\s*([a-zA-Z_][\w\-.:]*)/);
-        if (rootElementMatch && rootElementMatch[1]) {
-            return rootElementMatch[1];
-        }
-        return 'root'; // fallback
-    }
-
-    /**
-     * Detect root element type and build appropriate XML
-     */
-    private buildXml(obj: XmlObject, originalFilePath: string, originalXml: string): string {
-        // Extract the root element name directly from the original XML
-        let rootName = this.extractRootElementName(originalXml);
-        
-        // Fallback: try to determine from parsed object keys (excluding special keys)
-        if (rootName === 'root') {
-            const rootKeys = Object.keys(obj).filter(key => key !== '$' && key !== '_');
-            if (rootKeys.length > 0) {
-                rootName = rootKeys[0];
-            }
-        }
-        
-        const builder = new xml2js.Builder({
-            renderOpts: {
-                pretty: true,
-                indent: '    ' // Use 4 spaces for better readability
-            },
-            xmldec: {
-                version: '1.0',
-                encoding: 'UTF-8',
-                standalone: undefined
-            },
-            rootName: rootName,
-            headless: false,
-            attrkey: '$',
-            charkey: '_',
-            cdata: false,
-            allowSurrogateChars: false
-        });
-
-        let xmlOutput = builder.buildObject(obj);
-        
-        // Post-process to restore XML entity encoding for apostrophes
-        xmlOutput = this.restoreXmlEntities(xmlOutput);
-        
-        // Convert self-closing tags to full opening/closing tags (e.g., <value/> to <value></value>)
-        xmlOutput = xmlOutput.replace(/<(\w+)([^>]*)\/>/g, '<$1$2></$1>');
-        
-        // Ensure there's an empty line before EOF
-        if (!xmlOutput.endsWith('\n')) {
-            xmlOutput += '\n';
-        }
-        
-        return xmlOutput;
-    }
-
-    /**
      * Process a single XML file
      */
     private async processFile(filePath: string): Promise<boolean> {
@@ -433,12 +311,12 @@ export class SfMetadataAdjuster {
             const originalXml = await this.readXmlFile(filePath);
             
             // Prefix XML entities with markers before parsing to preserve them
-            const prefixedXml = this.prefixXmlEntities(originalXml);
+            const prefixedXml = prefixXmlEntities(originalXml);
             
             // Parse the prefixed XML
             let xmlObject;
             try {
-                xmlObject = await this.parseXml(prefixedXml);
+                xmlObject = await parseMetadataXml(prefixedXml);
             } catch (parseError) {
                 // XML is not valid - skip this file with a warning
                 console.log(`⚠️  Skipped (invalid XML): ${relativePath}`);
@@ -456,7 +334,7 @@ export class SfMetadataAdjuster {
             const sortedObject = sortXmlElements(cleanedObject, undefined, filePath);
 
             // Build the XML
-            const sortedXml = this.buildXml(sortedObject, filePath, originalXml);
+            const sortedXml = buildMetadataXml(sortedObject, originalXml);
 
             // Make sha256 hash of original and sorted XML
             const originalHash = hashString(originalXml);
