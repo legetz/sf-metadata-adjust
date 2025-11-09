@@ -73,10 +73,44 @@ sf swift metadata adjust --all --git-depth 5
 sf swift metadata adjust --help
 ```
 
+## Git Conflict Detection
+
+`sf swift detect git conflicts` scans a directory tree for leftover Git merge artifacts (`*.rej`). It is useful in CI pipelines and local workflows to ensure no rejected chunks ship with your metadata changes.
+
+```bash
+# Scan the current directory (default)
+sf swift detect git conflicts
+
+# Scan a specific package directory via positional argument
+sf swift detect git conflicts force-app/main/default
+
+# Scan a different working tree using the flag form
+sf swift detect git conflicts --target-dir tmp/scratch-org
+
+# Emit JSON summary for automation
+sf swift detect git conflicts --json
+```
+
 ### Arguments
-- `PATH` - Path to the SF project directory containing metadata files to process
+- `PATH` *(optional)* — Positional override for the directory to scan. Takes precedence over the flag.
 
 ### Flags
+
+| Flag | Short | Description | Default |
+|------|-------|-------------|---------|
+| `--target-dir` | `-d` | Directory to scan when no positional path is provided. | `.` (current) |
+
+### Behavior
+- Validates that the target directory exists before scanning.
+- Recursively searches the directory tree, skipping `node_modules` and `.git` folders.
+- Prints a formatted summary and exits with code `1` when conflicts are found, making it CI-friendly.
+- Returns a JSON payload (`count`, `conflictFiles`) when invoked with `--json`.
+- Lists relative paths for each detected `.rej` file to simplify follow-up fixes.
+
+### Metadata Adjustment Arguments
+- `PATH` - Path to the SF project directory containing metadata files to process
+
+### Metadata Adjustment Flags
 
 | Flag | Short | Description | Default |
 |------|-------|-------------|---------|
@@ -88,7 +122,7 @@ sf swift metadata adjust --help
 | `--backup` | - | Create backup before processing | Disabled |
 | `--help` | `-h` | Show help information | - |
 
-### Sample Output
+### Metadata Adjustment Sample Output
 ```
 🎯 Including only: permissionset, profile, translation
 🔍 Found 371 changed *-meta.xml files in last 100 commits
