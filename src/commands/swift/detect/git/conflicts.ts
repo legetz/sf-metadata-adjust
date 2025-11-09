@@ -1,11 +1,11 @@
-import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
-import { Messages } from '@salesforce/core';
-import { Args } from '@oclif/core';
-import * as fs from 'fs';
-import * as path from 'path';
+import { SfCommand, Flags } from "@salesforce/sf-plugins-core";
+import { Messages } from "@salesforce/core";
+import { Args } from "@oclif/core";
+import * as fs from "fs";
+import * as path from "path";
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
-const messages = Messages.loadMessages('sf-swift', 'detect.git.conflicts');
+const messages = Messages.loadMessages("sf-swift", "detect.git.conflicts");
 
 export type ConflictResult = {
   count: number;
@@ -19,56 +19,55 @@ export type ConflictResult = {
  */
 function findRejFiles(dir: string): string[] {
   const rejFiles: string[] = [];
-  
+
   try {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
-    
+
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      
+
       if (entry.isDirectory()) {
         // Skip .git and node_modules directories for performance
-        if (entry.name !== '.git' && entry.name !== 'node_modules') {
+        if (entry.name !== ".git" && entry.name !== "node_modules") {
           rejFiles.push(...findRejFiles(fullPath));
         }
-      } else if (entry.isFile() && entry.name.endsWith('.rej')) {
+      } else if (entry.isFile() && entry.name.endsWith(".rej")) {
         rejFiles.push(fullPath);
       }
     }
   } catch (error) {
     // Ignore permission errors and continue with other directories
-    if ((error as NodeJS.ErrnoException).code !== 'EACCES' && 
-        (error as NodeJS.ErrnoException).code !== 'EPERM') {
+    if ((error as NodeJS.ErrnoException).code !== "EACCES" && (error as NodeJS.ErrnoException).code !== "EPERM") {
       throw error;
     }
   }
-  
+
   return rejFiles;
 }
 
 export default class DetectGitConflicts extends SfCommand<ConflictResult> {
-  public static readonly description = messages.getMessage('description');
-  public static readonly examples = messages.getMessages('examples');
+  public static readonly description = messages.getMessage("description");
+  public static readonly examples = messages.getMessages("examples");
 
   public static readonly args = {
-      path: Args.string({
-        description: messages.getMessage('args.path.description'),
-        required: false,
-      }),
-    };
+    path: Args.string({
+      description: messages.getMessage("args.path.description"),
+      required: false
+    })
+  };
 
   public static readonly flags = {
     "target-dir": Flags.string({
-      char: 'd',
-      description: messages.getMessage('flags.target-dir.description'),
-      default: '.',
-    }),
+      char: "d",
+      description: messages.getMessage("flags.target-dir.description"),
+      default: "."
+    })
   };
 
   public async run(): Promise<ConflictResult> {
     const startTime = Date.now();
     const { args, flags } = await this.parse(DetectGitConflicts);
-    
+
     // Priority: path argument > targetDir flag > current directory
     const targetDir = args.path || flags["target-dir"] || process.cwd();
 
@@ -84,44 +83,51 @@ export default class DetectGitConflicts extends SfCommand<ConflictResult> {
     }
 
     this.log(`🔍 Scan GIT conflict (.rej) files in ${targetDir}`);
-    
+
     try {
       const conflictFiles = findRejFiles(targetDir);
       const conflictCount = conflictFiles.length;
       const elapsedTime = Date.now() - startTime;
-    
+
       // Output JSON result
       const result: ConflictResult = {
         count: conflictCount,
-        conflictFiles,
+        conflictFiles
       };
-    
+
       // Display summary
       this.displaySummary(conflictCount, conflictFiles, elapsedTime, targetDir);
-    
+
       // Exit with error code if conflicts were found
       if (conflictCount > 0) {
-        this.error(`❌ Found ${conflictCount} Git conflict (.rej) files. Please resolve conflicts before proceeding.`, { exit: 1 });
+        this.error(`❌ Found ${conflictCount} Git conflict (.rej) files. Please resolve conflicts before proceeding.`, {
+          exit: 1
+        });
       }
-      
+
       return result;
     } catch (error) {
       this.error(`❌ Error searching for .rej files: ${(error as Error).message}`, { exit: 1 });
     }
   }
 
-  private displaySummary(conflictCount: number, conflictFiles: string[], elapsedTimeMs: number, targetDir: string): void {
+  private displaySummary(
+    conflictCount: number,
+    conflictFiles: string[],
+    elapsedTimeMs: number,
+    targetDir: string
+  ): void {
     const elapsedSeconds = (elapsedTimeMs / 1000).toFixed(2);
-    
-    this.log('\n' + '='.repeat(60));
-    this.log('🔍 SCAN SUMMARY');
-    this.log('='.repeat(60));
+
+    this.log("\n" + "=".repeat(60));
+    this.log("🔍 SCAN SUMMARY");
+    this.log("=".repeat(60));
     this.log(`📁 Directory scanned: ${targetDir}`);
     this.log(`⏱️ Processing time: ${elapsedSeconds}s`);
     this.log(`📊 Conflict files found: ${conflictCount}`);
 
     if (conflictCount > 0) {
-      this.log('❌ Conflict files detected:');
+      this.log("❌ Conflict files detected:");
       conflictFiles.forEach((file, index) => {
         const relativePath = path.relative(targetDir, file);
         this.log(`  ${index + 1}. ${relativePath}`);

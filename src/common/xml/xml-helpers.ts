@@ -2,13 +2,13 @@
  * Shared XML helper utilities for metadata processing
  */
 
-import * as xml2js from 'xml2js';
+import * as xml2js from "xml2js";
 
 export interface XmlObject {
   [key: string]: any;
 }
 
-const ENTITY_MARKER = '___ENTITY_MARKER___';
+const ENTITY_MARKER = "___ENTITY_MARKER___";
 
 /**
  * Prefix XML entities with markers before parsing to preserve them
@@ -27,11 +27,11 @@ export function prefixXmlEntities(xmlString: string): string {
  */
 export function restoreXmlEntities(xmlString: string): string {
   return xmlString
-    .replace(new RegExp(`${ENTITY_MARKER}amp;`, 'g'), '&amp;')
-    .replace(new RegExp(`${ENTITY_MARKER}lt;`, 'g'), '&lt;')
-    .replace(new RegExp(`${ENTITY_MARKER}gt;`, 'g'), '&gt;')
-    .replace(new RegExp(`${ENTITY_MARKER}quot;`, 'g'), '&quot;')
-    .replace(new RegExp(`${ENTITY_MARKER}apos;`, 'g'), '&apos;');
+    .replace(new RegExp(`${ENTITY_MARKER}amp;`, "g"), "&amp;")
+    .replace(new RegExp(`${ENTITY_MARKER}lt;`, "g"), "&lt;")
+    .replace(new RegExp(`${ENTITY_MARKER}gt;`, "g"), "&gt;")
+    .replace(new RegExp(`${ENTITY_MARKER}quot;`, "g"), "&quot;")
+    .replace(new RegExp(`${ENTITY_MARKER}apos;`, "g"), "&apos;");
 }
 
 /**
@@ -42,7 +42,7 @@ export function extractRootElementName(xmlString: string): string {
   if (rootElementMatch && rootElementMatch[1]) {
     return rootElementMatch[1];
   }
-  return 'root';
+  return "root";
 }
 
 /**
@@ -58,8 +58,8 @@ export async function parseMetadataXml(xmlString: string): Promise<XmlObject> {
     trim: true,
     normalize: false,
     normalizeTags: false,
-    attrkey: '$',
-    charkey: '_',
+    attrkey: "$",
+    charkey: "_",
     charsAsChildren: false
   });
 
@@ -72,8 +72,8 @@ export async function parseMetadataXml(xmlString: string): Promise<XmlObject> {
 export function buildMetadataXml(obj: XmlObject, originalXml: string): string {
   let rootName = extractRootElementName(originalXml);
 
-  if (rootName === 'root') {
-    const rootKeys = Object.keys(obj).filter(key => key !== '$' && key !== '_');
+  if (rootName === "root") {
+    const rootKeys = Object.keys(obj).filter((key) => key !== "$" && key !== "_");
     if (rootKeys.length > 0) {
       rootName = rootKeys[0];
     }
@@ -82,27 +82,27 @@ export function buildMetadataXml(obj: XmlObject, originalXml: string): string {
   const builder = new xml2js.Builder({
     renderOpts: {
       pretty: true,
-      indent: '    '
+      indent: "    "
     },
     xmldec: {
-      version: '1.0',
-      encoding: 'UTF-8',
+      version: "1.0",
+      encoding: "UTF-8",
       standalone: undefined
     },
     rootName,
     headless: false,
-    attrkey: '$',
-    charkey: '_',
+    attrkey: "$",
+    charkey: "_",
     cdata: false,
     allowSurrogateChars: false
   });
 
   let xmlOutput = builder.buildObject(obj);
   xmlOutput = restoreXmlEntities(xmlOutput);
-  xmlOutput = xmlOutput.replace(/<(\w+)([^>]*)\/>/g, '<$1$2></$1>');
+  xmlOutput = xmlOutput.replace(/<(\w+)([^>]*)\/>/g, "<$1$2></$1>");
 
-  if (!xmlOutput.endsWith('\n')) {
-    xmlOutput += '\n';
+  if (!xmlOutput.endsWith("\n")) {
+    xmlOutput += "\n";
   }
 
   return xmlOutput;

@@ -2,9 +2,6 @@
 	"plugins": ["prettier-plugin-apex"],
 	"trailingComma": "none",
 	"printWidth": 120,
-	"useTabs": true,
-	"tabWidth": 2,
-	"endOfLine": "lf",
 	"apexInsertFinalNewline": false,
 	"overrides": [
 		{

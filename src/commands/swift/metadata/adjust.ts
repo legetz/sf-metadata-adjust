@@ -1,56 +1,56 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import { execSync } from 'child_process';
-import { SfMetadataAdjuster } from '../../../sf-metadata-adjuster.js';
-import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
-import { Messages } from '@salesforce/core';
-import { Args } from '@oclif/core';
+import * as path from "path";
+import * as fs from "fs";
+import { execSync } from "child_process";
+import { SfMetadataAdjuster } from "../../../sf-metadata-adjuster.js";
+import { SfCommand, Flags } from "@salesforce/sf-plugins-core";
+import { Messages } from "@salesforce/core";
+import { Args } from "@oclif/core";
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
-const messages = Messages.loadMessages('sf-swift', 'metadata.adjust');
+const messages = Messages.loadMessages("sf-swift", "metadata.adjust");
 
 export default class MetadataAdjust extends SfCommand<void> {
-  public static readonly description = messages.getMessage('description');
-  public static readonly examples = messages.getMessages('examples');
+  public static readonly description = messages.getMessage("description");
+  public static readonly examples = messages.getMessages("examples");
 
   public static readonly args = {
     path: Args.string({
-      description: messages.getMessage('args.path.description'),
-      required: false,
-    }),
+      description: messages.getMessage("args.path.description"),
+      required: false
+    })
   };
 
   public static readonly flags = {
     "target-dir": Flags.string({
-      char: 'd',
-      description: messages.getMessage('flags.targetDir.description'),
+      char: "d",
+      description: messages.getMessage("flags.targetDir.description")
     }),
     backup: Flags.boolean({
-      description: messages.getMessage('flags.backup.description'),
-      default: false,
+      description: messages.getMessage("flags.backup.description"),
+      default: false
     }),
     "git-depth": Flags.integer({
-      char: 'g',
-      description: messages.getMessage('flags.gitDepth.description'),
-      default: 0,
+      char: "g",
+      description: messages.getMessage("flags.gitDepth.description"),
+      default: 0
     }),
     include: Flags.string({
-      char: 'i',
-      description: messages.getMessage('flags.include.description'),
+      char: "i",
+      description: messages.getMessage("flags.include.description"),
       multiple: true,
-      delimiter: ',',
+      delimiter: ","
     }),
     exclude: Flags.string({
-      char: 'e',
-      description: messages.getMessage('flags.exclude.description'),
+      char: "e",
+      description: messages.getMessage("flags.exclude.description"),
       multiple: true,
-      delimiter: ',',
+      delimiter: ","
     }),
     all: Flags.boolean({
-      char: 'a',
-      description: messages.getMessage('flags.all.description'),
-      default: false,
-    }),
+      char: "a",
+      description: messages.getMessage("flags.all.description"),
+      default: false
+    })
   };
 
   /**
@@ -59,45 +59,47 @@ export default class MetadataAdjust extends SfCommand<void> {
   private getChangedMetadataFiles(gitDepth: number, targetPath: string): string[] {
     try {
       // Check if we're in a git repository
-      execSync('git rev-parse --git-dir', { cwd: targetPath, stdio: 'ignore' });
-      
+      execSync("git rev-parse --git-dir", { cwd: targetPath, stdio: "ignore" });
+
       // Check total number of commits to avoid "unknown revision" errors
       const commitCount = parseInt(
-        execSync('git rev-list --count HEAD', { cwd: targetPath, encoding: 'utf8' }).trim(),
+        execSync("git rev-list --count HEAD", { cwd: targetPath, encoding: "utf8" }).trim(),
         10
       );
-      
+
       const actualDepth = Math.min(gitDepth, commitCount - 1);
-      
+
       if (actualDepth <= 0) {
-        console.log('ℹ️  Not enough commits for git-depth analysis, processing all files...');
+        console.log("ℹ️  Not enough commits for git-depth analysis, processing all files...");
         return []; // Fall back to full directory scan
       }
-      
+
       // Get changed files from the last N commits
       const gitCommand = `git diff --name-only HEAD~${actualDepth} HEAD`;
-      const changedFiles = execSync(gitCommand, { cwd: targetPath, encoding: 'utf8' })
-        .split('\n')
-        .filter(file => file.trim() !== '')
-        .filter(file => file.endsWith('-meta.xml'))
-        .map(file => path.resolve(targetPath, file))
-        .filter(file => fs.existsSync(file)); // Only include files that still exist
+      const changedFiles = execSync(gitCommand, { cwd: targetPath, encoding: "utf8" })
+        .split("\n")
+        .filter((file) => file.trim() !== "")
+        .filter((file) => file.endsWith("-meta.xml"))
+        .map((file) => path.resolve(targetPath, file))
+        .filter((file) => fs.existsSync(file)); // Only include files that still exist
 
       console.log(`🔍 Found ${changedFiles.length} changed *-meta.xml files in last ${actualDepth} commits`);
-      
+
       if (actualDepth < gitDepth) {
-        console.log(`ℹ️  Note: Only ${commitCount} commits available, used depth of ${actualDepth} instead of ${gitDepth}`);
+        console.log(
+          `ℹ️  Note: Only ${commitCount} commits available, used depth of ${actualDepth} instead of ${gitDepth}`
+        );
       }
-      
+
       if (changedFiles.length === 0) {
-        console.log('ℹ️  No metadata files have changed in the specified commit range');
+        console.log("ℹ️  No metadata files have changed in the specified commit range");
       }
-      
+
       return changedFiles;
     } catch (error) {
       if (gitDepth > 0) {
         console.error(`❌ Git operation failed: ${error instanceof Error ? error.message : error}`);
-        console.error('   Falling back to scanning entire directory...');
+        console.error("   Falling back to scanning entire directory...");
       }
       return []; // Return empty array to trigger fallback to full directory scan
     }
@@ -108,27 +110,27 @@ export default class MetadataAdjust extends SfCommand<void> {
    */
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(MetadataAdjust);
-    
+
     // Priority: path argument > targetDir flag > current directory
     const targetDir = args.path || flags["target-dir"] || process.cwd();
-    
+
     // Start timer
     const startTime = Date.now();
-    
+
     // Convert flag values to arrays (handle undefined)
     const includeTypes = flags.include || [];
     const excludeTypes = flags.exclude || [];
-    
+
     // Display include types if specified
     if (includeTypes.length > 0) {
-      console.log(`\n🎯 Including only: ${includeTypes.join(', ')}`);
+      console.log(`\n🎯 Including only: ${includeTypes.join(", ")}`);
     }
-    
+
     // Display exclude types if specified
     if (excludeTypes.length > 0) {
-      console.log(`\n🚫 Excluding: ${excludeTypes.join(', ')}`);
+      console.log(`\n🚫 Excluding: ${excludeTypes.join(", ")}`);
     }
-    
+
     // Display --all flag status
     if (flags.all) {
       console.log(`\n🌐 Processing ALL metadata types (whitelist disabled)`);
@@ -136,7 +138,7 @@ export default class MetadataAdjust extends SfCommand<void> {
 
     try {
       const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes, flags.all);
-      
+
       // If git-depth is specified, set specific files to process
       if (flags["git-depth"] > 0) {
         const changedFiles = this.getChangedMetadataFiles(flags["git-depth"], targetDir);
@@ -152,16 +154,16 @@ export default class MetadataAdjust extends SfCommand<void> {
 
         adjuster.setFiles(changedFiles);
       }
-      
+
       // Process files (either all or specific based on setFiles)
       await adjuster.process(flags.backup);
-      
+
       // Calculate and display elapsed time
       const endTime = Date.now();
       const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
       console.log(`\n⏱️  Completed in ${elapsedSeconds} seconds`);
     } catch (error) {
-      console.error('❌ Error:', error instanceof Error ? error.message : String(error));
+      console.error("❌ Error:", error instanceof Error ? error.message : String(error));
       process.exit(1);
     }
   }
