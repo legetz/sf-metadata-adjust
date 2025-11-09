@@ -42,31 +42,28 @@ export default class DetectGitConflicts extends SfCommand<ConflictResult> {
     ensureDirectory(targetDir, this.error.bind(this));
 
     this.log(`🔍 Scan GIT conflict (.rej) files in ${targetDir}`);
-    const conflictCount = 0;
-    try {
-      const conflictFiles = findFilesBySuffix(targetDir, ".rej");
-      const elapsedTime = Date.now() - startTime;
 
-      // Output JSON result
-      const result: ConflictResult = {
-        count: conflictCount,
-        conflictFiles
-      };
+    const conflictFiles = findFilesBySuffix(targetDir, ".rej");
+    const conflictCount = conflictFiles.length;
+    const elapsedTime = Date.now() - startTime;
 
-      // Display summary
-      this.displaySummary(conflictCount, conflictFiles, elapsedTime, targetDir);
+    // Output JSON result
+    const result: ConflictResult = {
+      count: conflictCount,
+      conflictFiles
+    };
 
-      // Exit with error code if conflicts were found
-      if (conflictCount > 0) {
-        this.error(`❌ Found ${conflictCount} Git conflict (.rej) files. Please resolve conflicts before proceeding.`, {
-          exit: 1
-        });
-      }
+    // Display summary
+    this.displaySummary(conflictCount, conflictFiles, elapsedTime, targetDir);
 
-      return result;
-    } catch (error) {
-      this.error(`❌ Error searching for .rej files: ${(error as Error).message}`, { exit: 1 });
+    // Exit with error code if conflicts were found
+    if (conflictCount > 0) {
+      this.error(`❌ Found ${conflictCount} Git conflict (.rej) files. Please resolve conflicts before proceeding.`, {
+        exit: 1
+      });
     }
+
+    return result;
   }
 
   private displaySummary(
