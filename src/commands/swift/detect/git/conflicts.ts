@@ -1,8 +1,8 @@
 import { SfCommand, Flags } from "@salesforce/sf-plugins-core";
 import { Messages } from "@salesforce/core";
 import { Args } from "@oclif/core";
-import * as fs from "fs";
 import * as path from "path";
+import { ensureDirectory } from "../../../../common/helper/filesystem.js";
 import { findFilesBySuffix } from "../../../../common/helper/file-finder.js";
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
@@ -39,22 +39,12 @@ export default class DetectGitConflicts extends SfCommand<ConflictResult> {
     // Priority: path argument > targetDir flag > current directory
     const targetDir = args.path || flags["target-dir"] || process.cwd();
 
-    // Validate that the target directory exists
-    if (!fs.existsSync(targetDir)) {
-      this.error(`❌ Target directory does not exist: ${targetDir}`, { exit: 1 });
-    }
-
-    // Check if target is actually a directory
-    const stats = fs.statSync(targetDir);
-    if (!stats.isDirectory()) {
-      this.error(`❌ Target path is not a directory: ${targetDir}`, { exit: 1 });
-    }
+    ensureDirectory(targetDir, this.error.bind(this));
 
     this.log(`🔍 Scan GIT conflict (.rej) files in ${targetDir}`);
-
+    const conflictCount = 0;
     try {
       const conflictFiles = findFilesBySuffix(targetDir, ".rej");
-      const conflictCount = conflictFiles.length;
       const elapsedTime = Date.now() - startTime;
 
       // Output JSON result
