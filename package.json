@@ -25,7 +25,9 @@
     "clean": "rm -rf dist",
     "test": "mocha",
     "test:coverage": "nyc mocha",
-    "test:watch": "mocha --watch"
+    "test:watch": "mocha --watch",
+    "prettier": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "prettier:verify": "prettier --list-different \"src/**/*.ts\" \"test/**/*.ts\""
   },
   "keywords": [
     "salesforce-cli-plugin",

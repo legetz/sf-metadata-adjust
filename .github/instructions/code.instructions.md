@@ -5,8 +5,8 @@ applyTo: "src/**/*.ts,test/**/*.ts"
 ## General Coding Guidelines
 - Use TypeScript with ES module syntax (`import`/`export`) and keep files ASCII-only unless existing code proves otherwise.
 - Prefer concise helper utilities over large monolithic files. Reuse existing modules in `src/common/` when possible.
-- Follow existing code style: 2-space indentation, single quotes for strings, semicolons at line ends.
-- Log messages use emoji prefixes for readability (e.g., `✏️`, `⚠️`, `✅`). Maintain that style when adding new output.
+- Use Prettier for code formatting. Ensure new code adheres to the established style.
+- Run `npm run prettier` to format code before agent work is complete.
 
 ## Metadata Adjuster Rules
 - Respect the whitelist/exclusion model defined in `src/common/metadata/metadata-rules.ts`. Add new metadata types only after updating that module.
