@@ -53,7 +53,7 @@ export default class DetectGitConflicts extends SfCommand<ConflictResult> {
     this.log(`🔍 Scan GIT conflict (.rej) files in ${targetDir}`);
 
     try {
-  const conflictFiles = findFilesBySuffix(targetDir, ".rej");
+      const conflictFiles = findFilesBySuffix(targetDir, ".rej");
       const conflictCount = conflictFiles.length;
       const elapsedTime = Date.now() - startTime;
 

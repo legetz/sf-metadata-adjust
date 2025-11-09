@@ -2,10 +2,10 @@
  * Recursive file finder utilities for metadata helpers
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 
-const DEFAULT_SKIP_DIRECTORIES = ['.git', 'node_modules'];
+const DEFAULT_SKIP_DIRECTORIES = [".git", "node_modules"];
 
 type ErrorWithCode = NodeJS.ErrnoException & { code?: string };
 
@@ -21,7 +21,7 @@ export interface FindFilesOptions {
  * @param options - Optional configuration for skipped directories.
  */
 export function findFilesBySuffix(dir: string, suffix: string, options: FindFilesOptions = {}): string[] {
-  const normalizedSuffix = suffix.startsWith('.') ? suffix : `.${suffix}`;
+  const normalizedSuffix = suffix.startsWith(".") ? suffix : `.${suffix}`;
   const skipped = new Set([...DEFAULT_SKIP_DIRECTORIES, ...(options.skipDirectories ?? [])]);
 
   const visit = (currentDir: string): string[] => {
@@ -44,7 +44,7 @@ export function findFilesBySuffix(dir: string, suffix: string, options: FindFile
       }
     } catch (error) {
       const err = error as ErrorWithCode;
-      if (err.code !== 'EACCES' && err.code !== 'EPERM') {
+      if (err.code !== "EACCES" && err.code !== "EPERM") {
         throw error;
       }
     }
