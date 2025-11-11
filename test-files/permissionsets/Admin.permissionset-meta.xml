@@ -54,13 +54,16 @@
         <field>Contact.DoNotCall</field>
         <readable>true</readable>
     </fieldPermissions>
+
     <fieldPermissions>
         <editable>true</editable>
         <field>Asset.AssetLevel</field>
         <readable>true</readable>
     </fieldPermissions>
+
+
     <fieldPermissions>
-        <editable>true</editable>
+            <editable>true</editable>
         <field>Test.Example__c</field>
         <readable>true</readable>
     </fieldPermissions>
