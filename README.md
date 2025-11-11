@@ -15,6 +15,11 @@ A fast and powerful Salesforce CLI plugin with utilities for metadata formatting
 - ⚡ **Performance Optimization** - Skips files that are already properly sorted
 - ⏱️ **Execution Timer** - Shows how long processing took overall
 
+## Commands
+
+- [`sf swift metadata adjust`](#command-sf-swift-metadata-adjust)
+- [`sf swift detect git conflicts`](#command-sf-swift-detect-git-conflicts)
+
 ## Installation
 
 ### Salesforce CLI Plugin
@@ -27,7 +32,11 @@ sf plugins install sf-swift
 - Make sure that you have SF CLI: `sf -v`
 - Install SF CLI if missing or outdated: `npm install @salesforce/cli -g`
 
-## Usage
+## Command: `sf swift metadata adjust`
+
+Sorts and normalizes Salesforce metadata XML files with type-aware rules, entity preservation, and optional git-delta processing.
+
+### Quick start
 
 ```bash
 # Process current directory
@@ -72,45 +81,10 @@ sf swift metadata adjust --all --git-depth 5
 # Get help
 sf swift metadata adjust --help
 ```
-
-## Git Conflict Detection
-
-`sf swift detect git conflicts` scans a directory tree for leftover Git merge artifacts (`*.rej`). It is useful in CI pipelines and local workflows to ensure no rejected chunks ship with your metadata changes.
-
-```bash
-# Scan the current directory (default)
-sf swift detect git conflicts
-
-# Scan a specific package directory via positional argument
-sf swift detect git conflicts force-app/main/default
-
-# Scan a different working tree using the flag form
-sf swift detect git conflicts --target-dir tmp/scratch-org
-
-# Emit JSON summary for automation
-sf swift detect git conflicts --json
-```
-
 ### Arguments
-- `PATH` *(optional)* — Positional override for the directory to scan. Takes precedence over the flag.
-
-### Flags
-
-| Flag | Short | Description | Default |
-|------|-------|-------------|---------|
-| `--target-dir` | `-d` | Directory to scan when no positional path is provided. | `.` (current) |
-
-### Behavior
-- Validates that the target directory exists before scanning.
-- Recursively searches the directory tree, skipping `node_modules` and `.git` folders.
-- Prints a formatted summary and exits with code `1` when conflicts are found, making it CI-friendly.
-- Returns a JSON payload (`count`, `conflictFiles`) when invoked with `--json`.
-- Lists relative paths for each detected `.rej` file to simplify follow-up fixes.
-
-### Metadata Adjustment Arguments
 - `PATH` - Path to the SF project directory containing metadata files to process
 
-### Metadata Adjustment Flags
+### Flags
 
 | Flag | Short | Description | Default |
 |------|-------|-------------|---------|
@@ -122,7 +96,7 @@ sf swift detect git conflicts --json
 | `--backup` | - | Create backup before processing | Disabled |
 | `--help` | `-h` | Show help information | - |
 
-### Metadata Adjustment Sample Output
+### Sample output
 ```
 🎯 Including only: permissionset, profile, translation
 🔍 Found 371 changed *-meta.xml files in last 100 commits
@@ -147,7 +121,7 @@ sf swift detect git conflicts --json
 ⏱️  Completed in 3.10 seconds
 ```
 
-## Exclude Filter
+### Exclude filter
 
 By default, the tool excludes certain Salesforce metadata file types that should not be sorted:
 
@@ -170,11 +144,11 @@ sf swift metadata adjust --exclude labels,field
 
 These files are counted in the summary statistics but never modified.
 
-## Safety Whitelist
+### Safety whitelist
 
 By default, the tool uses a **safety whitelist** to only process metadata types that are known to be safe for XML sorting. This prevents potential issues with complex metadata types that may have specific ordering requirements.
 
-### Whitelisted Types (Safe by Default)
+#### Whitelisted types (safe by default)
 
 The following metadata types are whitelisted and will be processed by default:
 
@@ -189,13 +163,13 @@ The following metadata types are whitelisted and will be processed by default:
 - `trigger-meta.xml` - Triggers
 - `validationRule-meta.xml` - Validation Rules
 
-### Always Excluded Types
+#### Always excluded types
 
 Some types are **always excluded** due to special handling requirements:
 
 - `flow-meta.xml` - Flows (require special key ordering logic)
 
-### Using the Whitelist
+#### Using the whitelist
 
 ```bash
 # Default: Only process whitelisted types
@@ -210,7 +184,7 @@ sf swift metadata adjust --include reportType
 # Use --all flag to process all metadata types without whitelist restrictions.
 ```
 
-### Bypassing the Whitelist
+#### Bypassing the whitelist
 
 Use the `--all` flag to process any metadata type, bypassing whitelist restrictions:
 
@@ -234,30 +208,75 @@ sf swift metadata adjust --all --backup
 - Review changes carefully before committing
 - Check that metadata still deploys correctly
 
-## Performance Tips
+### Performance tips
 
 1. **Use git-depth for large repos**: Only process changed files
 2. **Backup disabled by default**: Already optimized for CI/CD
 3. **Run before commit**: Catch issues early with git-depth 1
 4. **Ignore backup folders**: Add `.backup-*` to `.gitignore` (when using --backup)
 
-## Integration Examples
+## Command: `sf swift detect git conflicts`
 
-### Pre-commit Hook
+Scans your repository for pending `.rej` files generated by GIT merges
+
+### Quick start
+
 ```bash
-#!/bin/bash
-sf swift metadata adjust --git-depth 1
-if [ $? -ne 0 ]; then
-    echo "Metadata formatting failed!"
-    exit 1
-fi
+# Scan current directory for reject files
+sf swift detect git conflicts
+
+# Emit machine-readable JSON output
+sf swift detect git conflicts --json
+
+# Check a specific directory
+sf swift detect git conflicts --target-dir force-app/main/default
 ```
 
-### GitHub Actions - Automatic Adjustment in PR
+### Flags
 
-This plugin includes a ready-to-use GHA workflow that automatically adjusts metadata files on pull requests and commits the changes back to the PR branch.
+| Flag | Short | Description | Default |
+|------|-------|-------------|---------|
+| `--target-dir` | `-d` | Directory to scan for `.rej` files | `.` (current) |
+| `--json` | - | Return machine-readable output | Disabled |
 
-#### Setup
+### Output
+
+Default output is human-readable and includes a summary plus any `.rej` file paths. Use `--json` to integrate with automation (e.g., GitHub Actions).
+
+```json
+{
+   "status": 1,
+   "result": {
+      "count": 2,
+      "conflictFiles": [
+         "force-app/main/default/classes/Foo.cls-meta.xml.rej",
+         "force-app/main/default/objects/Bar__c.object-meta.xml.rej"
+      ]
+   },
+   "warnings": []
+}
+```
+
+### When to use it
+
+- Fail CI checks whenever metadata merges leave behind `.rej` files
+- Provide actionable feedback in PR comments (see workflows below)
+- Run locally before committing to ensure no conflict leftovers are staged
+
+## Integration Examples
+
+### GitHub Actions
+
+This plugin ships with two ready-to-use workflows:
+
+- `.github/workflows/pr-metadata-adjust.yml` adjusts metadata files in pull requests
+- `.github/workflows/pr-detect-issues.yml` fails the PR when `.rej` files are found and comments with the list
+
+#### Metadata adjust workflow (`.github/workflows/pr-metadata-adjust.yml`)
+
+This workflow automatically adjusts metadata files on pull requests and commits the changes back to the PR branch.
+
+##### Setup
 
 1. The workflow file is already included: `.github/workflows/pr-metadata-adjust.yml`
 2. Configure which metadata types to process by editing the `INCLUDED_TYPES` environment variable:
@@ -277,7 +296,7 @@ env:
   ADJUST_DELTA_ONLY: 'false'
 ```
 
-#### Features
+##### Features
 
 - ✅ **Automatic Triggering** - Runs when metadata files change in PRs
 - 🤖 **Auto-Commit** - Commits formatting changes back to PR branch
@@ -285,7 +304,7 @@ env:
 - 🎯 **Configurable** - Choose which metadata types to process
 - ⚡ **Delta Mode** - Optionally process only files changed in the PR
 
-#### Workflow Behavior
+##### Workflow behavior
 
 1. **Triggered** when a PR is opened, synchronized, or reopened with metadata file changes
 2. **Delta Mode** (when `ADJUST_DELTA_ONLY: 'true'`):
@@ -300,7 +319,7 @@ env:
 6. **Comments** on the PR with the formatting status and scope
 
 
-#### Customization
+##### Customization
 
 Edit `.github/workflows/pr-metadata-adjust.yml` to:
 - Change `INCLUDED_TYPES` to process different metadata types
@@ -309,6 +328,16 @@ Edit `.github/workflows/pr-metadata-adjust.yml` to:
 - Adjust commit message format
 - Adjust PR comment templates
 - Change trigger conditions
+
+#### Detect issues workflow (`.github/workflows/pr-detect-issues.yml`)
+
+This workflow installs the plugin, runs `sf swift detect git conflicts --json`, and fails the PR when `.rej` files are present. It also comments on the pull request with the full list of conflict files so authors can resolve them quickly.
+
+**Key points**
+
+- Requires no configuration—runs on every pull request touching Apex metadata files
+- Comment body includes a code block listing each `.rej` file returned by the command
+- Failing step signals reviewers that conflicts must be addressed before merging
 
 ## Troubleshooting
 
