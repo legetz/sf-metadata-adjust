@@ -7,7 +7,6 @@ on:
       - '**/*-meta.xml'  # Only trigger when metadata files are changed
 
 env:
-  NODE_VERSION: '20'
   # Configure which metadata types to include (comma-separated, no spaces)
   # Leave empty to process all whitelisted types
   # Example: 'profile,permissionset' or 'profile,permissionset,customMetadata'
@@ -34,9 +33,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
       - name: Install SF Swift plugin

@@ -7,9 +7,6 @@ on:
       - '**/*.cls'  # Apex classes
       - '**/*.trigger'  # Apex triggers
 
-env:
-  NODE_VERSION: '20'
-
 jobs:
   adjust:
     runs-on: ubuntu-latest
@@ -27,9 +24,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
       - name: Install dependencies
