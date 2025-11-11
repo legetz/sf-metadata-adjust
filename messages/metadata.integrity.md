@@ -29,8 +29,14 @@ Number of commits to inspect for deletions. Values greater than available histor
 # log.depthClamped
 ℹ️ Git history only contained {0} commit(s); requested depth of {1} was clamped.
 
-# log.analysisComplete
-🔍 Scanned {0} profile/permission set file(s) for references.
+# log.metadataAnalysisComplete
+🔍 Scanned {0} profile/permission set file(s) for access references.
+
+# log.sourceAnalysisComplete
+🧩 Scanned {0} source file(s) (Apex, LWC, Aura) for Apex class references.
+
+# log.flowAnalysisComplete
+🌊 Scanned {0} Flow definition file(s) for Apex class references.
 
 # log.noIssues
 ✅ No lingering references detected. Metadata integrity looks good!

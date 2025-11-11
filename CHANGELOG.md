@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🧭 **Metadata Integrity Command**: Added `sf swift metadata integrity` to flag lingering profile and permission set references to deleted Apex classes or custom fields.
 - 🧩 **Metadata Integrity Helper**: Shared analyzer for detecting class and field permission issues with coverage tests.
 
+### Changed
+- 🔍 **Integrity Coverage**: The metadata integrity scan now inspects Apex source, LWC/Aura components, and Flow definitions for references to deleted Apex classes.
+
 ## [1.0.12] - 2025-11-11
 
 ### Changed

@@ -12,6 +12,7 @@ import {
   buildRemovedMetadataIndex,
   classifyRemovedMetadataFile,
   findIntegrityIssuesInMetadata,
+  findIntegrityIssuesInSource,
   IntegrityIssue,
   RemovedMetadataItem
 } from "../../../common/metadata/metadata-integrity.js";
@@ -79,9 +80,7 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
     });
 
     const removedIndex = buildRemovedMetadataIndex(removedItems);
-    const metadataFiles = new Set<string>();
-    findFilesBySuffix(targetDir, ".profile-meta.xml").forEach((file) => metadataFiles.add(file));
-    findFilesBySuffix(targetDir, ".permissionset-meta.xml").forEach((file) => metadataFiles.add(file));
+    const metadataFiles = this.collectMetadataFiles(targetDir);
 
     const issues: IntegrityIssue[] = [];
 
@@ -98,7 +97,37 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
       }
     }
 
-    this.log(messages.getMessage("log.analysisComplete", [metadataFiles.size]));
+    this.log(messages.getMessage("log.metadataAnalysisComplete", [metadataFiles.length]));
+
+    const sourceFiles = this.collectSourceFiles(targetDir);
+    this.log(messages.getMessage("log.sourceAnalysisComplete", [sourceFiles.length]));
+
+    for (const sourceFile of sourceFiles) {
+      try {
+        const content = await fs.readFile(sourceFile, "utf8");
+        const relativePath = path.relative(targetDir, sourceFile) || path.basename(sourceFile);
+        const sourceIssues = findIntegrityIssuesInSource(content, relativePath, removedIndex);
+        issues.push(...sourceIssues);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.warn(messages.getMessage("warn.analysisFailed", [sourceFile, message]));
+      }
+    }
+
+    const flowFiles = this.collectFlowFiles(targetDir);
+    this.log(messages.getMessage("log.flowAnalysisComplete", [flowFiles.length]));
+
+    for (const flowFile of flowFiles) {
+      try {
+        const xml = await fs.readFile(flowFile, "utf8");
+        const relativePath = path.relative(targetDir, flowFile) || path.basename(flowFile);
+        const flowIssues = findIntegrityIssuesInSource(xml, relativePath, removedIndex);
+        issues.push(...flowIssues);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.warn(messages.getMessage("warn.analysisFailed", [flowFile, message]));
+      }
+    }
 
     if (issues.length === 0) {
       const elapsedSeconds = ((Date.now() - start) / 1000).toFixed(2);
@@ -200,5 +229,56 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
       this.warn(messages.getMessage("warn.gitError", [message]));
       return { removedItems: [], actualDepth: 0 };
     }
+  }
+
+  private collectMetadataFiles(targetDir: string): string[] {
+    const files = new Set<string>();
+    findFilesBySuffix(targetDir, ".profile-meta.xml").forEach((file) => files.add(file));
+    findFilesBySuffix(targetDir, ".permissionset-meta.xml").forEach((file) => files.add(file));
+    return Array.from(files);
+  }
+
+  private collectSourceFiles(targetDir: string): string[] {
+    const files = new Set<string>();
+
+    findFilesBySuffix(targetDir, ".cls").forEach((file) => {
+      if (file.includes(`${path.sep}classes${path.sep}`)) {
+        files.add(file);
+      }
+    });
+
+    findFilesBySuffix(targetDir, ".trigger").forEach((file) => {
+      if (file.includes(`${path.sep}triggers${path.sep}`)) {
+        files.add(file);
+      }
+    });
+
+    findFilesBySuffix(targetDir, ".js").forEach((file) => {
+      if (file.includes(`${path.sep}lwc${path.sep}`) || file.includes(`${path.sep}aura${path.sep}`)) {
+        files.add(file);
+      }
+    });
+
+    findFilesBySuffix(targetDir, ".ts").forEach((file) => {
+      if (file.includes(`${path.sep}lwc${path.sep}`)) {
+        files.add(file);
+      }
+    });
+
+    [".cmp", ".app", ".evt", ".auradoc", ".design"].forEach((suffix) => {
+      findFilesBySuffix(targetDir, suffix).forEach((file) => files.add(file));
+    });
+
+    findFilesBySuffix(targetDir, ".html").forEach((file) => {
+      if (file.includes(`${path.sep}lwc${path.sep}`) || file.includes(`${path.sep}aura${path.sep}`)) {
+        files.add(file);
+      }
+    });
+
+    return Array.from(files);
+  }
+
+  private collectFlowFiles(targetDir: string): string[] {
+    return findFilesBySuffix(targetDir, ".flow-meta.xml");
   }
 }

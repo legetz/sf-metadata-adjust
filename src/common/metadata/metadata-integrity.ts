@@ -10,7 +10,10 @@ export interface RemovedMetadataItem {
   sourceFile: string;
 }
 
-export type IntegrityIssueType = "MissingApexClassReference" | "MissingCustomFieldReference";
+export type IntegrityIssueType =
+  | "MissingApexClassReference"
+  | "MissingCustomFieldReference"
+  | "DanglingApexClassReference";
 
 export interface IntegrityIssue {
   type: IntegrityIssueType;
@@ -131,6 +134,38 @@ export function findIntegrityIssuesInMetadata(
   return issues;
 }
 
+/**
+ * Scan arbitrary source content for references to removed Apex classes.
+ */
+export function findIntegrityIssuesInSource(
+  rawContent: string,
+  filePath: string,
+  removedIndex: RemovedMetadataIndex
+): IntegrityIssue[] {
+  const issues: IntegrityIssue[] = [];
+  const classIndex = removedIndex.get("ApexClass");
+
+  if (!classIndex || classIndex.size === 0) {
+    return issues;
+  }
+
+  const content = rawContent ?? "";
+
+  for (const className of classIndex.keys()) {
+    const pattern = buildClassReferencePattern(className);
+    if (pattern.test(content)) {
+      issues.push({
+        type: "DanglingApexClassReference",
+        missingItem: className,
+        referencingFile: filePath,
+        detail: `Source references removed Apex class '${className}'`
+      });
+    }
+  }
+
+  return issues;
+}
+
 function toArray<T>(value: T | T[] | undefined): T[] {
   if (!value) {
     return [];
@@ -177,4 +212,13 @@ function isTrue(value: any): boolean {
   }
 
   return Boolean(candidate);
+}
+
+function buildClassReferencePattern(className: string): RegExp {
+  const escaped = escapeRegExp(className);
+  return new RegExp(`\\b${escaped}\\b`, "g");
+}
+
+function escapeRegExp(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

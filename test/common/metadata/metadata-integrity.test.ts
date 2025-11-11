@@ -3,6 +3,7 @@ import {
   classifyRemovedMetadataFile,
   buildRemovedMetadataIndex,
   findIntegrityIssuesInMetadata,
+  findIntegrityIssuesInSource,
   RemovedMetadataItem
 } from "../../../src/common/metadata/metadata-integrity.js";
 import { parseMetadataXml } from "../../../src/common/xml/xml-helpers.js";
@@ -128,6 +129,107 @@ describe("metadata-integrity", () => {
     const metadata = await parseMetadataXml(xml);
     const issues = findIntegrityIssuesInMetadata(metadata, "profiles/Admin.profile-meta.xml", index);
 
+    expect(issues).to.have.lengthOf(0);
+  });
+
+  it("detects Apex class references in other Apex classes", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "ApexClass",
+        name: "LegacyService",
+        referenceKey: "LegacyService",
+        sourceFile: "force-app/main/default/classes/LegacyService.cls"
+      }
+    ];
+
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = "public class NewService { void exec() { LegacyService.doWork(); } }";
+    const issues = findIntegrityIssuesInSource(content, "classes/NewService.cls", index);
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "DanglingApexClassReference",
+      missingItem: "LegacyService",
+      referencingFile: "classes/NewService.cls"
+    });
+  });
+
+  it("detects Apex class references in LWC imports", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "ApexClass",
+        name: "LegacyService",
+        referenceKey: "LegacyService",
+        sourceFile: "force-app/main/default/classes/LegacyService.cls"
+      }
+    ];
+
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = "import getData from '@salesforce/apex/LegacyService.fetchData';";
+    const issues = findIntegrityIssuesInSource(content, "lwc/sample/sample.js", index);
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "DanglingApexClassReference",
+      missingItem: "LegacyService",
+      referencingFile: "lwc/sample/sample.js"
+    });
+  });
+
+  it("detects Apex class references in Aura markup", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "ApexClass",
+        name: "LegacyService",
+        referenceKey: "LegacyService",
+        sourceFile: "force-app/main/default/classes/LegacyService.cls"
+      }
+    ];
+
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = '<aura:component controller="LegacyService"></aura:component>';
+    const issues = findIntegrityIssuesInSource(content, "aura/Sample/Sample.cmp", index);
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "DanglingApexClassReference",
+      missingItem: "LegacyService",
+      referencingFile: "aura/Sample/Sample.cmp"
+    });
+  });
+
+  it("detects Apex class references in flow definitions", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "ApexClass",
+        name: "LegacyService",
+        referenceKey: "LegacyService",
+        sourceFile: "force-app/main/default/classes/LegacyService.cls"
+      }
+    ];
+
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = `<flow:interview xmlns:flow="http://soap.sforce.com/2006/04/metadata">
+        <actionCalls>
+            <actionType>apex</actionType>
+            <apexClass>LegacyService</apexClass>
+            <apexMethod>doWork</apexMethod>
+        </actionCalls>
+    </flow:interview>`;
+    const issues = findIntegrityIssuesInSource(content, "flows/Example.flow-meta.xml", index);
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "DanglingApexClassReference",
+      missingItem: "LegacyService",
+      referencingFile: "flows/Example.flow-meta.xml"
+    });
+  });
+
+  it("ignores files when no removed Apex classes are present", () => {
+    const removedItems: RemovedMetadataItem[] = [];
+    const index = buildRemovedMetadataIndex(removedItems);
+    const issues = findIntegrityIssuesInSource("System.debug('Hello');", "classes/Example.cls", index);
     expect(issues).to.have.lengthOf(0);
   });
 });

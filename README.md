@@ -322,6 +322,9 @@ Returns a summary of deleted metadata and outstanding references. Use `--json` t
 
 - Deleted Apex classes that are still granted access via `classAccesses`
 - Deleted custom fields that remain in `fieldPermissions`
+- Apex classes and triggers that reference removed Apex classes
+- Lightning Web Components (`lwc/*`) and Aura components (`aura/*`) that import or declare removed Apex classes
+- Flow definitions (`*.flow-meta.xml`) that invoke removed Apex classes
 - Profiles and Permission Sets located anywhere within the target directory
 
 ### When to use it
