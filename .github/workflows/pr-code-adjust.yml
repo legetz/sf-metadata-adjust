@@ -1,11 +1,13 @@
 name: PR code adjust
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - '**/*.cls'  # Apex classes
-      - '**/*.trigger'  # Apex triggers
+  workflow_dispatch:
+  # Uncomment the following to trigger on PRs modifying Apex classes/triggers
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
+  #   paths:
+  #     - '**/*.cls'  # Apex classes
+  #     - '**/*.trigger'  # Apex triggers
 
 jobs:
   adjust:

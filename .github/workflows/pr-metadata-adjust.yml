@@ -1,10 +1,12 @@
 name: PR metadata adjust
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - '**/*-meta.xml'  # Only trigger when metadata files are changed
+  workflow_dispatch:
+  # Uncomment the following to trigger on PRs
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
+  #   paths:
+  #     - '**/*-meta.xml'  # Only trigger when metadata files are changed
 
 env:
   # Configure which metadata types to include (comma-separated, no spaces)
