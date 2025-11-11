@@ -1,0 +1,84 @@
+name: PR detect issues
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  detect-issues:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install SF Swift plugin
+        run: |
+          npm install -g @salesforce/cli
+          echo "y" | sf plugins install sf-swift
+      
+      - name: Configure GIT
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Detect GIT conflicts
+        id: detect
+        continue-on-error: true
+        run: |
+          set +e
+          OUTPUT=$(sf swift detect git conflicts 2>&1)
+          STATUS=$?
+          echo "$OUTPUT"
+          REJ_COUNT=$(echo "$OUTPUT" | grep -o '\.rej' | wc -l | xargs)
+          if [ -z "$REJ_COUNT" ]; then REJ_COUNT=0; fi
+
+          CONFLICT_FILES=$(echo "$OUTPUT" | awk '/Conflict files detected:/{flag=1; next} flag')
+
+          echo "status=${STATUS}" >> $GITHUB_OUTPUT
+          echo "rej_count=${REJ_COUNT}" >> $GITHUB_OUTPUT
+          printf 'log<<EOF\n%s\nEOF\n' "$OUTPUT" >> $GITHUB_OUTPUT
+          printf 'conflict_files<<EOF\n%s\nEOF\n' "$CONFLICT_FILES" >> $GITHUB_OUTPUT
+
+          exit ${STATUS}
+
+      - name: Comment on PR
+        if: steps.detect.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const rejCount = Number('${{ steps.detect.outputs.rej_count }}');
+            const countText = rejCount > 0 ? `${rejCount} .rej file${rejCount === 1 ? '' : 's'}` : 'one or more .rej files';
+            const conflictFiles = `${{ steps.detect.outputs.conflict_files }}`.trim();
+            const conflictList = conflictFiles ? `\n\n**Conflict files:**\n\n\`\`\`\n${conflictFiles}\n\`\`\`` : '';
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Reject files detected**\n\n' +
+                    'The command `sf swift detect git conflicts` reported ' + countText + '.\n\n' +
+                    'Please resolve the merge conflicts, remove the generated `.rej` files, and push the updates to re-run this check.' +
+                    conflictList
+            });
+
+      - name: Fail workflow when reject files detected
+        if: steps.detect.outcome == 'failure'
+        run: exit 1
