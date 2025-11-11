@@ -57,7 +57,7 @@ export default class DetectGitConflicts extends SfCommand<ConflictResult> {
     this.displaySummary(conflictCount, conflictFiles, elapsedTime, targetDir);
 
     // Exit with error code if conflicts were found
-    if (conflictCount > 0) {
+    if (conflictCount > 0 && !flags["json"]) {
       this.error(`❌ Found ${conflictCount} Git conflict (.rej) files. Please resolve conflicts before proceeding.`, {
         exit: 1
       });
