@@ -19,6 +19,7 @@ A fast and powerful Salesforce CLI plugin with utilities for metadata formatting
 
 - [`sf swift metadata adjust`](#command-sf-swift-metadata-adjust)
 - [`sf swift detect git conflicts`](#command-sf-swift-detect-git-conflicts)
+- [`sf swift metadata integrity`](#command-sf-swift-metadata-integrity)
 
 ## Installation
 
@@ -262,6 +263,72 @@ Default output is human-readable and includes a summary plus any `.rej` file pat
 - Fail CI checks whenever metadata merges leave behind `.rej` files
 - Provide actionable feedback in PR comments (see workflows below)
 - Run locally before committing to ensure no conflict leftovers are staged
+
+## Command: `sf swift metadata integrity`
+
+Cross-checks recent Git history for deleted metadata (Apex classes, custom fields) and reports lingering references that still grant access in Profiles or Permission Sets.
+
+### Quick start
+
+```bash
+# Analyze the latest 5 commits (default depth)
+sf swift metadata integrity
+
+# Target a specific package directory with deeper history
+sf swift metadata integrity ./force-app/main/default --git-depth 10
+
+# Emit machine-readable results
+sf swift metadata integrity --json
+```
+
+### Flags
+
+| Flag | Short | Description | Default |
+|------|-------|-------------|---------|
+| `--target-dir` | `-d` | Directory to analyze when no positional path is given | `.` (current) |
+| `--git-depth` | `-g` | Number of commits to inspect for deletions (clamped to history) | `5` |
+
+### Output
+
+Returns a summary of deleted metadata and outstanding references. Use `--json` to integrate with CI or PR bots.
+
+```json
+{
+   "status": 1,
+   "result": {
+      "gitDepthUsed": 5,
+      "removedItems": [
+         {
+            "type": "ApexClass",
+            "name": "ObsoleteService",
+            "referenceKey": "ObsoleteService",
+            "sourceFile": "force-app/main/default/classes/ObsoleteService.cls"
+         }
+      ],
+      "issues": [
+         {
+            "type": "MissingApexClassReference",
+            "missingItem": "ObsoleteService",
+            "referencingFile": "profiles/Admin.profile-meta.xml",
+            "detail": "Class access still enabled for removed Apex class 'ObsoleteService'"
+         }
+      ]
+   },
+   "warnings": []
+}
+```
+
+### What it checks
+
+- Deleted Apex classes that are still granted access via `classAccesses`
+- Deleted custom fields that remain in `fieldPermissions`
+- Profiles and Permission Sets located anywhere within the target directory
+
+### When to use it
+
+- Clean up dangling permissions after deleting code or fields
+- Block deployments or merges that would leave broken references in user access metadata
+- Audit refactors to ensure no obsolete classes or fields linger in security artifacts
 
 ## Integration Examples
 

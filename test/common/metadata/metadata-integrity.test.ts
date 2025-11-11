@@ -1,0 +1,133 @@
+import { expect } from "chai";
+import {
+  classifyRemovedMetadataFile,
+  buildRemovedMetadataIndex,
+  findIntegrityIssuesInMetadata,
+  RemovedMetadataItem
+} from "../../../src/common/metadata/metadata-integrity.js";
+import { parseMetadataXml } from "../../../src/common/xml/xml-helpers.js";
+
+describe("metadata-integrity", () => {
+  it("classifies removed Apex class files", () => {
+    const result = classifyRemovedMetadataFile("force-app/main/default/classes/Example.cls");
+    expect(result).to.deep.equal({
+      type: "ApexClass",
+      name: "Example",
+      referenceKey: "Example",
+      sourceFile: "force-app/main/default/classes/Example.cls"
+    });
+  });
+
+  it("classifies removed custom field files", () => {
+    const result = classifyRemovedMetadataFile(
+      "force-app/main/default/objects/Account/fields/Sample__c.field-meta.xml"
+    );
+    expect(result).to.deep.equal({
+      type: "CustomField",
+      name: "Account.Sample__c",
+      referenceKey: "Account.Sample__c",
+      sourceFile: "force-app/main/default/objects/Account/fields/Sample__c.field-meta.xml"
+    });
+  });
+
+  it("ignores unrelated file paths", () => {
+    const result = classifyRemovedMetadataFile("force-app/main/default/labels/Custom.labels-meta.xml");
+    expect(result).to.equal(null);
+  });
+
+  it("detects references to removed Apex classes", async () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "ApexClass",
+        name: "ObsoleteService",
+        referenceKey: "ObsoleteService",
+        sourceFile: "force-app/main/default/classes/ObsoleteService.cls"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
+            <classAccesses>
+                <apexClass>ObsoleteService</apexClass>
+                <enabled>true</enabled>
+            </classAccesses>
+            <classAccesses>
+                <apexClass>ActiveService</apexClass>
+                <enabled>true</enabled>
+            </classAccesses>
+        </Profile>`;
+
+    const metadata = await parseMetadataXml(xml);
+    const issues = findIntegrityIssuesInMetadata(metadata, "profiles/Admin.profile-meta.xml", index);
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "MissingApexClassReference",
+      missingItem: "ObsoleteService",
+      referencingFile: "profiles/Admin.profile-meta.xml"
+    });
+  });
+
+  it("detects references to removed fields when access granted", async () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Account.Legacy__c",
+        referenceKey: "Account.Legacy__c",
+        sourceFile: "force-app/main/default/objects/Account/fields/Legacy__c.field-meta.xml"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+            <fieldPermissions>
+                <editable>true</editable>
+                <field>Account.Legacy__c</field>
+                <readable>true</readable>
+            </fieldPermissions>
+            <fieldPermissions>
+                <editable>false</editable>
+                <field>Account.Active__c</field>
+                <readable>true</readable>
+            </fieldPermissions>
+        </PermissionSet>`;
+
+    const metadata = await parseMetadataXml(xml);
+    const issues = findIntegrityIssuesInMetadata(metadata, "permissionsets/Admin.permissionset-meta.xml", index);
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "MissingCustomFieldReference",
+      missingItem: "Account.Legacy__c",
+      referencingFile: "permissionsets/Admin.permissionset-meta.xml"
+    });
+  });
+
+  it("ignores permissions when both readable and editable are false", async () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Account.Legacy__c",
+        referenceKey: "Account.Legacy__c",
+        sourceFile: "force-app/main/default/objects/Account/fields/Legacy__c.field-meta.xml"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
+            <fieldPermissions>
+                <editable>false</editable>
+                <field>Account.Legacy__c</field>
+                <readable>false</readable>
+            </fieldPermissions>
+        </Profile>`;
+
+    const metadata = await parseMetadataXml(xml);
+    const issues = findIntegrityIssuesInMetadata(metadata, "profiles/Admin.profile-meta.xml", index);
+
+    expect(issues).to.have.lengthOf(0);
+  });
+});
