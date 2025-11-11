@@ -53,12 +53,8 @@ jobs:
           echo "rej_count=${REJ_COUNT}" >> $GITHUB_OUTPUT
           printf 'conflict_files<<EOF\n%s\nEOF\n' "$CONFLICT_FILES" >> $GITHUB_OUTPUT
 
-          if [ "${REJ_COUNT}" -ne 0 ]; then
-            exit 1
-          fi
-
       - name: Comment on PR
-        if: steps.detect.outcome == 'failure'
+        if: steps.detect.rej_count > 0
         uses: actions/github-script@v7
         with:
           script: |
@@ -78,5 +74,5 @@ jobs:
             });
 
       - name: Fail workflow when reject files detected
-        if: steps.detect.outcome == 'failure'
+        if: steps.detect.rej_count > 0
         run: exit 1
