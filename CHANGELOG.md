@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.12] - 2025-11-11
+
+### Changed
+- 🚀 **GitHub Actions**: Bumped workflow runtime to Node.js 24 for metadata adjustment and conflict detection jobs.
+- 📦 **Workflow Polish**: Tightened `.github/workflows/pr-detect-issues.yml` so comments only post when conflicts exist and improved the Markdown summary.
+- 📚 **Documentation**: Streamlined README introduction to highlight both `metadata adjust` and `detect git conflicts` commands.
+
 ## [1.0.11] - 2025-11-11
 
 ### Added
@@ -75,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 - **Command**: `sf swift metadata adjust` - Main command for sorting metadata files
 
+[1.0.12]: https://github.com/legetz/sf-swift/releases/tag/v1.0.12
 [1.0.11]: https://github.com/legetz/sf-swift/releases/tag/v1.0.11
 [1.0.10]: https://github.com/legetz/sf-swift/releases/tag/v1.0.10
 [1.0.5]: https://github.com/legetz/sf-swift/releases/tag/v1.0.5
