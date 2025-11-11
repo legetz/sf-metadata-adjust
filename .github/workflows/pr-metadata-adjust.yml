@@ -110,7 +110,7 @@ jobs:
           git add **/*-meta.xml
           git commit -m "🤖 Adjusted ${{ steps.format.outputs.file_count }} metadata files
 
-          Powered by sf-swift plugin."
+          ⚡ Powered by [sf-swift plugin](https://www.npmjs.com/package/sf-swift)"
           git push
       
       - name: Comment on PR
@@ -132,5 +132,6 @@ jobs:
                     'Metadata files have been adjusted for consistency.\n\n' +
                     '**Scope:** `' + scope + '`\n' +
                     '**Types processed:** `${{ env.INCLUDED_TYPES || 'All whitelisted types' }}`\n\n' +
-                    'Please review the changes in the latest commit.'
+                    'Please review the changes in the latest commit.\n\n' +
+                    '⚡ Powered by [sf-swift plugin](https://www.npmjs.com/package/sf-swift)'
             })
