@@ -41,23 +41,21 @@ jobs:
 
       - name: Detect GIT conflicts
         id: detect
-        continue-on-error: true
         run: |
-          set +e
-          OUTPUT=$(sf swift detect git conflicts 2>&1)
-          STATUS=$?
-          echo "$OUTPUT"
-          REJ_COUNT=$(echo "$OUTPUT" | grep -o '\.rej' | wc -l | xargs)
-          if [ -z "$REJ_COUNT" ]; then REJ_COUNT=0; fi
+          OUTPUT=$(sf swift detect git conflicts --json || true)
+          echo "$OUTPUT" | tee detect-output.json
 
-          CONFLICT_FILES=$(echo "$OUTPUT" | awk '/Conflict files detected:/{flag=1; next} flag')
+          STATUS=$(jq -r 'if (.status | type == "number") then .status else 1 end' detect-output.json)
+          REJ_COUNT=$(jq -r '.result.count // 0' detect-output.json)
+          CONFLICT_FILES=$(jq -r '(.result.conflictFiles // []) | join("\n")' detect-output.json)
 
           echo "status=${STATUS}" >> $GITHUB_OUTPUT
           echo "rej_count=${REJ_COUNT}" >> $GITHUB_OUTPUT
-          printf 'log<<EOF\n%s\nEOF\n' "$OUTPUT" >> $GITHUB_OUTPUT
           printf 'conflict_files<<EOF\n%s\nEOF\n' "$CONFLICT_FILES" >> $GITHUB_OUTPUT
 
-          exit ${STATUS}
+          if [ "${REJ_COUNT}" -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Comment on PR
         if: steps.detect.outcome == 'failure'
