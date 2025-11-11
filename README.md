@@ -335,7 +335,7 @@ This workflow installs the plugin, runs `sf swift detect git conflicts --json`, 
 
 **Key points**
 
-- Requires no configuration—runs on every pull request touching Apex metadata files
+- Requires no configuration—runs on every pull request
 - Comment body includes a code block listing each `.rej` file returned by the command
 - Failing step signals reviewers that conflicts must be addressed before merging
 
