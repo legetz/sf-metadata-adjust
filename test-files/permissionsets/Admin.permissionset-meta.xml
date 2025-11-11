@@ -1,37 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
-<classAccesses>
-        <apexClass>AccountService</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-
-        <classAccesses>
-            <apexClass>OrderService</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
     <classAccesses>
         <apexClass>AccountApiService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <customPermissions>
+    <classAccesses>
+        <apexClass>AccountService</apexClass>
         <enabled>true</enabled>
-        <name>TestPermission</name>
-    </customPermissions>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>OrderService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <customPermissions>
         <enabled>true</enabled>
         <name>AnotherTestPerm</name>
+    </customPermissions>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>TestPermission</name>
     </customPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Account.AccountNumber</field>
         <readable>true</readable>
     </fieldPermissions>
-
-
-    
     <fieldPermissions>
         <editable>true</editable>
         <field>Account.Name</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Asset.AssetLevel</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -46,6 +47,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Contact.Department</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Contact.Description</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -54,22 +60,19 @@
         <field>Contact.DoNotCall</field>
         <readable>true</readable>
     </fieldPermissions>
-
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Asset.AssetLevel</field>
-        <readable>true</readable>
-    </fieldPermissions>
-
-
-    <fieldPermissions>
-            <editable>true</editable>
-        <field>Test.Example__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Test.ExampleOne__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Test.ExampleTwo__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Test.Example__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -82,39 +85,28 @@
         <field>Test.Examplethree__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Test.ExampleTwo__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Contact.Department</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    
     <hasActivationRequired>false</hasActivationRequired>
     <label>Admin permissions</label>
-<objectPermissions>
-<allowCreate>true</allowCreate>
-<allowDelete>true</allowDelete>
-<allowEdit>true</allowEdit>
-<allowRead>true</allowRead>
-<modifyAllRecords>true</modifyAllRecords>
-<object>Asset</object>
-<viewAllFields>false</viewAllFields>
-<viewAllRecords>true</viewAllRecords>
-</objectPermissions>
-<objectPermissions>
-<allowCreate>true</allowCreate>
-<allowDelete>true</allowDelete>
-<allowEdit>true</allowEdit>
-<allowRead>true</allowRead>
-<modifyAllRecords>true</modifyAllRecords>
-<object>Account</object>
-<viewAllFields>false</viewAllFields>
-<viewAllRecords>true</viewAllRecords>
-</objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>Account</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>Asset</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
     <userPermissions>
         <enabled>true</enabled>
         <name>SubscribeReportToOtherUsers</name>
