@@ -1,5 +1,5 @@
 # description
-Scan recent git history for deleted metadata and detect lingering references in Profiles and Permission Sets.
+Scan recent git history for deleted metadata and detect lingering references across access control, source code, layouts, and flows.
 
 # args.path.description
 Path to the Salesforce project root to analyze. Defaults to current directory if not provided.
@@ -36,7 +36,16 @@ Number of commits to inspect for deletions. Values greater than available histor
 🧩 Scanned {0} source file(s) (Apex, LWC, Aura) for Apex class references.
 
 # log.flowAnalysisComplete
-🌊 Scanned {0} Flow definition file(s) for Apex class references.
+🌊 Scanned {0} Flow definition file(s) for Apex class and field references.
+
+# log.layoutAnalysisComplete
+📐 Scanned {0} layout file(s) for field references.
+
+# log.flexipageAnalysisComplete
+🪟 Scanned {0} Flexipage file(s) for field references.
+
+# log.validationAnalysisComplete
+✅ Scanned {0} object metadata file(s) for validation rule field references.
 
 # log.noIssues
 ✅ No lingering references detected. Metadata integrity looks good!

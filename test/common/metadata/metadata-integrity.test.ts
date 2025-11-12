@@ -3,6 +3,7 @@ import {
   classifyRemovedMetadataFile,
   buildRemovedMetadataIndex,
   findIntegrityIssuesInMetadata,
+  findCustomFieldIssuesInContent,
   findIntegrityIssuesInSource,
   RemovedMetadataItem
 } from "../../../src/common/metadata/metadata-integrity.js";
@@ -28,6 +29,16 @@ describe("metadata-integrity", () => {
       name: "Account.Sample__c",
       referenceKey: "Account.Sample__c",
       sourceFile: "force-app/main/default/objects/Account/fields/Sample__c.field-meta.xml"
+    });
+  });
+
+  it("classifies removed Visualforce page files", () => {
+    const result = classifyRemovedMetadataFile("force-app/main/default/pages/Obsolete.page");
+    expect(result).to.deep.equal({
+      type: "VisualforcePage",
+      name: "Obsolete",
+      referenceKey: "Obsolete",
+      sourceFile: "force-app/main/default/pages/Obsolete.page"
     });
   });
 
@@ -132,6 +143,36 @@ describe("metadata-integrity", () => {
     expect(issues).to.have.lengthOf(0);
   });
 
+  it("detects Visualforce page references when access remains enabled", async () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "VisualforcePage",
+        name: "LegacyPage",
+        referenceKey: "LegacyPage",
+        sourceFile: "force-app/main/default/pages/LegacyPage.page"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
+            <pageAccesses>
+                <apexPage>LegacyPage</apexPage>
+                <enabled>true</enabled>
+            </pageAccesses>
+        </Profile>`;
+
+    const metadata = await parseMetadataXml(xml);
+    const issues = findIntegrityIssuesInMetadata(metadata, "profiles/Admin.profile-meta.xml", index);
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "MissingVisualforcePageReference",
+      missingItem: "LegacyPage",
+      referencingFile: "profiles/Admin.profile-meta.xml"
+    });
+  });
+
   it("detects Apex class references in other Apex classes", () => {
     const removedItems: RemovedMetadataItem[] = [
       {
@@ -223,6 +264,124 @@ describe("metadata-integrity", () => {
       type: "DanglingApexClassReference",
       missingItem: "LegacyService",
       referencingFile: "flows/Example.flow-meta.xml"
+    });
+  });
+
+  it("detects flow references to removed custom fields", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Account.Legacy__c",
+        referenceKey: "Account.Legacy__c",
+        sourceFile: "force-app/main/default/objects/Account/fields/Legacy__c.field-meta.xml"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = `<flow:interview xmlns:flow="http://soap.sforce.com/2006/04/metadata">
+        <recordUpdates>
+            <inputAssignments>
+                <field>Account.Legacy__c</field>
+            </inputAssignments>
+        </recordUpdates>
+    </flow:interview>`;
+
+    const issues = findCustomFieldIssuesInContent(content, "flows/Example.flow-meta.xml", index, "Flow");
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "MissingCustomFieldReference",
+      missingItem: "Account.Legacy__c",
+      referencingFile: "flows/Example.flow-meta.xml"
+    });
+  });
+
+  it("detects layout references to removed custom fields", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Account.Legacy__c",
+        referenceKey: "Account.Legacy__c",
+        sourceFile: "force-app/main/default/objects/Account/fields/Legacy__c.field-meta.xml"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = `<?xml version="1.0" encoding="UTF-8"?>
+        <Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+            <layoutSections>
+                <layoutColumns>
+                    <layoutItems>
+                        <field>Legacy__c</field>
+                    </layoutItems>
+                </layoutColumns>
+            </layoutSections>
+        </Layout>`;
+
+    const issues = findCustomFieldIssuesInContent(content, "layouts/Account.layout-meta.xml", index, "Layout");
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "MissingCustomFieldReference",
+      missingItem: "Account.Legacy__c",
+      referencingFile: "layouts/Account.layout-meta.xml"
+    });
+  });
+
+  it("detects Flexipage references to removed custom fields", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Account.Legacy__c",
+        referenceKey: "Account.Legacy__c",
+        sourceFile: "force-app/main/default/objects/Account/fields/Legacy__c.field-meta.xml"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = `<?xml version="1.0" encoding="UTF-8"?>
+        <FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+            <region>
+                <componentInstance>
+                    <componentName>force:relatedList</componentName>
+                    <listView>Account.Legacy__c</listView>
+                </componentInstance>
+            </region>
+        </FlexiPage>`;
+
+    const issues = findCustomFieldIssuesInContent(
+      content,
+      "flexipages/Account_Record_Page.flexipage-meta.xml",
+      index,
+      "Flexipage"
+    );
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "MissingCustomFieldReference",
+      missingItem: "Account.Legacy__c",
+      referencingFile: "flexipages/Account_Record_Page.flexipage-meta.xml"
+    });
+  });
+
+  it("detects validation rule references to removed custom fields", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Account.Legacy__c",
+        referenceKey: "Account.Legacy__c",
+        sourceFile: "force-app/main/default/objects/Account/fields/Legacy__c.field-meta.xml"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = `<?xml version="1.0" encoding="UTF-8"?>
+        <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+            <validationRules>
+                <fullName>Prevent_Legacy__c</fullName>
+                <errorConditionFormula>NOT(ISBLANK(Legacy__c))</errorConditionFormula>
+            </validationRules>
+        </CustomObject>`;
+
+    const issues = findCustomFieldIssuesInContent(content, "objects/Account.object-meta.xml", index, "Validation Rule");
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "MissingCustomFieldReference",
+      missingItem: "Account.Legacy__c",
+      referencingFile: "objects/Account.object-meta.xml"
     });
   });
 

@@ -11,11 +11,17 @@ import { parseMetadataXml } from "../../../common/xml/xml-helpers.js";
 import {
   buildRemovedMetadataIndex,
   classifyRemovedMetadataFile,
+  CustomFieldReferenceContext,
+  findCustomFieldIssuesInContent,
   findIntegrityIssuesInMetadata,
   findIntegrityIssuesInSource,
   IntegrityIssue,
   RemovedMetadataItem
 } from "../../../common/metadata/metadata-integrity.js";
+import {
+  getSurfacesForRemovedTypes,
+  IntegrityReferenceSurface
+} from "../../../common/metadata/metadata-integrity-rules.js";
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages("sf-swift", "metadata.integrity");
@@ -80,53 +86,84 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
     });
 
     const removedIndex = buildRemovedMetadataIndex(removedItems);
-    const metadataFiles = this.collectMetadataFiles(targetDir);
+    const surfacesToCheck = getSurfacesForRemovedTypes(new Set(removedItems.map((item) => item.type)));
+    const shouldCheckAccessControl = this.shouldCheckAnySurface(surfacesToCheck, ["profile", "permissionSet"]);
+    const shouldCheckSource = this.shouldCheckAnySurface(surfacesToCheck, ["apexSource", "lwc", "aura"]);
 
     const issues: IntegrityIssue[] = [];
 
-    for (const metadataFile of metadataFiles) {
-      try {
-        const rawXml = await fs.readFile(metadataFile, "utf8");
-        const parsed = await parseMetadataXml(rawXml);
-        const relativePath = path.relative(targetDir, metadataFile) || path.basename(metadataFile);
-        const fileIssues = findIntegrityIssuesInMetadata(parsed, relativePath, removedIndex);
-        issues.push(...fileIssues);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        this.warn(messages.getMessage("warn.analysisFailed", [metadataFile, message]));
+    if (shouldCheckAccessControl) {
+      const metadataFiles = this.collectMetadataFiles(targetDir);
+
+      for (const metadataFile of metadataFiles) {
+        try {
+          const rawXml = await fs.readFile(metadataFile, "utf8");
+          const parsed = await parseMetadataXml(rawXml);
+          const relativePath = path.relative(targetDir, metadataFile) || path.basename(metadataFile);
+          const fileIssues = findIntegrityIssuesInMetadata(parsed, relativePath, removedIndex);
+          issues.push(...fileIssues);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.warn(messages.getMessage("warn.analysisFailed", [metadataFile, message]));
+        }
+      }
+
+      this.log(messages.getMessage("log.metadataAnalysisComplete", [metadataFiles.length]));
+    }
+
+    if (shouldCheckSource) {
+      const sourceFiles = this.collectSourceFiles(targetDir);
+      this.log(messages.getMessage("log.sourceAnalysisComplete", [sourceFiles.length]));
+
+      for (const sourceFile of sourceFiles) {
+        try {
+          const content = await fs.readFile(sourceFile, "utf8");
+          const relativePath = path.relative(targetDir, sourceFile) || path.basename(sourceFile);
+          const sourceIssues = findIntegrityIssuesInSource(content, relativePath, removedIndex);
+          issues.push(...sourceIssues);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.warn(messages.getMessage("warn.analysisFailed", [sourceFile, message]));
+        }
       }
     }
 
-    this.log(messages.getMessage("log.metadataAnalysisComplete", [metadataFiles.length]));
+    if (surfacesToCheck.has("flow")) {
+      const flowFiles = this.collectFlowFiles(targetDir);
+      this.log(messages.getMessage("log.flowAnalysisComplete", [flowFiles.length]));
 
-    const sourceFiles = this.collectSourceFiles(targetDir);
-    this.log(messages.getMessage("log.sourceAnalysisComplete", [sourceFiles.length]));
-
-    for (const sourceFile of sourceFiles) {
-      try {
-        const content = await fs.readFile(sourceFile, "utf8");
-        const relativePath = path.relative(targetDir, sourceFile) || path.basename(sourceFile);
-        const sourceIssues = findIntegrityIssuesInSource(content, relativePath, removedIndex);
-        issues.push(...sourceIssues);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        this.warn(messages.getMessage("warn.analysisFailed", [sourceFile, message]));
+      for (const flowFile of flowFiles) {
+        try {
+          const xml = await fs.readFile(flowFile, "utf8");
+          const relativePath = path.relative(targetDir, flowFile) || path.basename(flowFile);
+          const flowIssues = [
+            ...findIntegrityIssuesInSource(xml, relativePath, removedIndex),
+            ...findCustomFieldIssuesInContent(xml, relativePath, removedIndex, "Flow")
+          ];
+          issues.push(...flowIssues);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.warn(messages.getMessage("warn.analysisFailed", [flowFile, message]));
+        }
       }
     }
 
-    const flowFiles = this.collectFlowFiles(targetDir);
-    this.log(messages.getMessage("log.flowAnalysisComplete", [flowFiles.length]));
+    if (surfacesToCheck.has("layout")) {
+      const layoutFiles = this.collectLayoutFiles(targetDir);
+      this.log(messages.getMessage("log.layoutAnalysisComplete", [layoutFiles.length]));
+      await this.processCustomFieldFileSet(layoutFiles, targetDir, removedIndex, "Layout", issues);
+    }
 
-    for (const flowFile of flowFiles) {
-      try {
-        const xml = await fs.readFile(flowFile, "utf8");
-        const relativePath = path.relative(targetDir, flowFile) || path.basename(flowFile);
-        const flowIssues = findIntegrityIssuesInSource(xml, relativePath, removedIndex);
-        issues.push(...flowIssues);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        this.warn(messages.getMessage("warn.analysisFailed", [flowFile, message]));
-      }
+    if (surfacesToCheck.has("flexipage")) {
+      const flexipageFiles = this.collectFlexipageFiles(targetDir);
+      this.log(messages.getMessage("log.flexipageAnalysisComplete", [flexipageFiles.length]));
+      await this.processCustomFieldFileSet(flexipageFiles, targetDir, removedIndex, "Flexipage", issues);
+    }
+
+    if (surfacesToCheck.has("validationRule")) {
+      const validationRuleFiles = this.collectValidationRuleFiles(targetDir);
+      this.log(messages.getMessage("log.validationAnalysisComplete", [validationRuleFiles.length]));
+      await this.processCustomFieldFileSet(validationRuleFiles, targetDir, removedIndex, "Validation Rule", issues);
     }
 
     if (issues.length === 0) {
@@ -280,5 +317,44 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
 
   private collectFlowFiles(targetDir: string): string[] {
     return findFilesBySuffix(targetDir, ".flow-meta.xml");
+  }
+
+  private collectLayoutFiles(targetDir: string): string[] {
+    return findFilesBySuffix(targetDir, ".layout-meta.xml");
+  }
+
+  private collectFlexipageFiles(targetDir: string): string[] {
+    return findFilesBySuffix(targetDir, ".flexipage-meta.xml");
+  }
+
+  private collectValidationRuleFiles(targetDir: string): string[] {
+    return findFilesBySuffix(targetDir, ".object-meta.xml");
+  }
+
+  private shouldCheckAnySurface(
+    surfaces: Set<IntegrityReferenceSurface>,
+    targets: IntegrityReferenceSurface[]
+  ): boolean {
+    return targets.some((surface) => surfaces.has(surface));
+  }
+
+  private async processCustomFieldFileSet(
+    files: string[],
+    targetDir: string,
+    removedIndex: ReturnType<typeof buildRemovedMetadataIndex>,
+    context: CustomFieldReferenceContext,
+    issues: IntegrityIssue[]
+  ): Promise<void> {
+    for (const file of files) {
+      try {
+        const rawContent = await fs.readFile(file, "utf8");
+        const relativePath = path.relative(targetDir, file) || path.basename(file);
+        const fileIssues = findCustomFieldIssuesInContent(rawContent, relativePath, removedIndex, context);
+        issues.push(...fileIssues);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.warn(messages.getMessage("warn.analysisFailed", [file, message]));
+      }
+    }
   }
 }

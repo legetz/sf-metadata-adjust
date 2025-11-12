@@ -1,7 +1,6 @@
 import * as path from "path";
 import { XmlObject } from "../xml/xml-helpers.js";
-
-export type RemovedMetadataType = "ApexClass" | "CustomField";
+import { RemovedMetadataType } from "./metadata-integrity-rules.js";
 
 export interface RemovedMetadataItem {
   type: RemovedMetadataType;
@@ -13,6 +12,7 @@ export interface RemovedMetadataItem {
 export type IntegrityIssueType =
   | "MissingApexClassReference"
   | "MissingCustomFieldReference"
+  | "MissingVisualforcePageReference"
   | "DanglingApexClassReference";
 
 export interface IntegrityIssue {
@@ -50,6 +50,17 @@ export function classifyRemovedMetadataFile(filePath: string): RemovedMetadataIt
       type: "CustomField",
       name: referenceKey,
       referenceKey,
+      sourceFile: filePath
+    };
+  }
+
+  const vfPageMatch = normalized.match(/\/pages\/([^/]+)\.page(?:-meta\.xml)?$/i);
+  if (vfPageMatch) {
+    const pageName = vfPageMatch[1];
+    return {
+      type: "VisualforcePage",
+      name: pageName,
+      referenceKey: pageName,
       sourceFile: filePath
     };
   }
@@ -131,6 +142,28 @@ export function findIntegrityIssuesInMetadata(
     }
   }
 
+  const pageIndex = removedIndex.get("VisualforcePage");
+  if (pageIndex) {
+    const pageAccessesArray = toArray(metadata.pageAccesses);
+    for (const access of pageAccessesArray) {
+      const pageName = firstString(access?.apexPage);
+      const enabled = isTrue(access?.enabled);
+
+      if (!pageName || !enabled) {
+        continue;
+      }
+
+      if (pageIndex.has(pageName)) {
+        issues.push({
+          type: "MissingVisualforcePageReference",
+          missingItem: pageName,
+          referencingFile: filePath,
+          detail: `Page access still enabled for removed Visualforce page '${pageName}'`
+        });
+      }
+    }
+  }
+
   return issues;
 }
 
@@ -160,6 +193,39 @@ export function findIntegrityIssuesInSource(
         referencingFile: filePath,
         detail: `Source references removed Apex class '${className}'`
       });
+    }
+  }
+
+  return issues;
+}
+
+export type CustomFieldReferenceContext = "Flow" | "Layout" | "Flexipage" | "Validation Rule";
+
+export function findCustomFieldIssuesInContent(
+  rawContent: string,
+  filePath: string,
+  removedIndex: RemovedMetadataIndex,
+  context: CustomFieldReferenceContext
+): IntegrityIssue[] {
+  const fieldIndex = removedIndex.get("CustomField");
+
+  if (!fieldIndex || fieldIndex.size === 0) {
+    return [];
+  }
+
+  const issues: IntegrityIssue[] = [];
+  const content = rawContent ?? "";
+
+  for (const fieldName of fieldIndex.keys()) {
+    const patterns = buildFieldReferencePatterns(fieldName, context);
+    if (patterns.some((pattern) => pattern.test(content))) {
+      issues.push({
+        type: "MissingCustomFieldReference",
+        missingItem: fieldName,
+        referencingFile: filePath,
+        detail: `${context} references removed field '${fieldName}'`
+      });
+      continue;
     }
   }
 
@@ -219,6 +285,62 @@ function buildClassReferencePattern(className: string): RegExp {
   return new RegExp(`\\b${escaped}\\b`, "g");
 }
 
+function buildFieldReferencePatterns(fieldName: string, context: CustomFieldReferenceContext): RegExp[] {
+  const [objectName, apiName] = splitFieldReference(fieldName);
+  const patterns: RegExp[] = [];
+
+  if (context === "Flow") {
+    patterns.push(new RegExp(`\\b${escapeRegExp(fieldName)}\\b`, "g"));
+    if (apiName) {
+      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    return patterns;
+  }
+
+  if (context === "Layout") {
+    if (apiName) {
+      patterns.push(new RegExp(`<field>\\s*${escapeRegExp(apiName)}\\s*</field>`, "gi"));
+      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    return patterns;
+  }
+
+  if (context === "Flexipage") {
+    patterns.push(new RegExp(`\\b${escapeRegExp(fieldName)}\\b`, "g"));
+    if (apiName) {
+      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    return patterns;
+  }
+
+  if (context === "Validation Rule") {
+    if (apiName) {
+      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    if (objectName && apiName) {
+      patterns.push(new RegExp(`\\b${escapeRegExp(objectName)}\\.${escapeRegExp(apiName)}`, "g"));
+    }
+    return patterns;
+  }
+
+  return patterns;
+}
+
 function escapeRegExp(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function splitFieldReference(fieldName: string): [string | undefined, string | undefined] {
+  const parts = fieldName.split(".");
+  if (parts.length === 2) {
+    return [parts[0], parts[1]];
+  }
+
+  if (parts.length > 2) {
+    const apiName = parts.pop();
+    const objectName = parts.join(".");
+    return [objectName, apiName];
+  }
+
+  return [undefined, parts[0]];
 }
