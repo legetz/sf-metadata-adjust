@@ -166,6 +166,24 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
       await this.processCustomFieldFileSet(validationRuleFiles, targetDir, removedIndex, "Validation Rule", issues);
     }
 
+    if (surfacesToCheck.has("fieldSet")) {
+      const fieldSetFiles = this.collectFieldSetFiles(targetDir);
+      this.log(messages.getMessage("log.fieldSetAnalysisComplete", [fieldSetFiles.length]));
+      await this.processCustomFieldFileSet(fieldSetFiles, targetDir, removedIndex, "Field Set", issues);
+    }
+
+    if (surfacesToCheck.has("recordType")) {
+      const recordTypeFiles = this.collectRecordTypeFiles(targetDir);
+      this.log(messages.getMessage("log.recordTypeAnalysisComplete", [recordTypeFiles.length]));
+      await this.processCustomFieldFileSet(recordTypeFiles, targetDir, removedIndex, "Record Type", issues);
+    }
+
+    if (surfacesToCheck.has("compactLayout")) {
+      const compactLayoutFiles = this.collectCompactLayoutFiles(targetDir);
+      this.log(messages.getMessage("log.compactLayoutAnalysisComplete", [compactLayoutFiles.length]));
+      await this.processCustomFieldFileSet(compactLayoutFiles, targetDir, removedIndex, "Compact Layout", issues);
+    }
+
     if (issues.length === 0) {
       const elapsedSeconds = ((Date.now() - start) / 1000).toFixed(2);
       this.log(messages.getMessage("log.noIssues"));
@@ -329,6 +347,18 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
 
   private collectValidationRuleFiles(targetDir: string): string[] {
     return findFilesBySuffix(targetDir, ".object-meta.xml");
+  }
+
+  private collectFieldSetFiles(targetDir: string): string[] {
+    return findFilesBySuffix(targetDir, ".fieldSet-meta.xml");
+  }
+
+  private collectRecordTypeFiles(targetDir: string): string[] {
+    return findFilesBySuffix(targetDir, ".recordType-meta.xml");
+  }
+
+  private collectCompactLayoutFiles(targetDir: string): string[] {
+    return findFilesBySuffix(targetDir, ".compactLayout-meta.xml");
   }
 
   private shouldCheckAnySurface(

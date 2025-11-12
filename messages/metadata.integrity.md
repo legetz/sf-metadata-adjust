@@ -47,6 +47,15 @@ Number of commits to inspect for deletions. Values greater than available histor
 # log.validationAnalysisComplete
 ✅ Scanned {0} object metadata file(s) for validation rule field references.
 
+# log.fieldSetAnalysisComplete
+🧺 Scanned {0} field set file(s) for field references.
+
+# log.recordTypeAnalysisComplete
+🗂️ Scanned {0} record type file(s) for field references.
+
+# log.compactLayoutAnalysisComplete
+🧱 Scanned {0} compact layout file(s) for field references.
+
 # log.noIssues
 ✅ No lingering references detected. Metadata integrity looks good!
 

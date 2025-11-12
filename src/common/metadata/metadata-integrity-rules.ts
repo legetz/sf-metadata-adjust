@@ -9,7 +9,10 @@ export type IntegrityReferenceSurface =
   | "flow"
   | "layout"
   | "flexipage"
-  | "validationRule";
+  | "validationRule"
+  | "fieldSet"
+  | "recordType"
+  | "compactLayout";
 
 export interface MetadataIntegrityRule {
   removedType: RemovedMetadataType;
@@ -23,7 +26,17 @@ export const METADATA_INTEGRITY_RULES: MetadataIntegrityRule[] = [
   },
   {
     removedType: "CustomField",
-    surfaces: ["profile", "permissionSet", "flow", "layout", "flexipage", "validationRule"]
+    surfaces: [
+      "profile",
+      "permissionSet",
+      "flow",
+      "layout",
+      "flexipage",
+      "validationRule",
+      "fieldSet",
+      "recordType",
+      "compactLayout"
+    ]
   },
   {
     removedType: "VisualforcePage",

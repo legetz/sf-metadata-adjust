@@ -199,7 +199,14 @@ export function findIntegrityIssuesInSource(
   return issues;
 }
 
-export type CustomFieldReferenceContext = "Flow" | "Layout" | "Flexipage" | "Validation Rule";
+export type CustomFieldReferenceContext =
+  | "Flow"
+  | "Layout"
+  | "Flexipage"
+  | "Validation Rule"
+  | "Field Set"
+  | "Record Type"
+  | "Compact Layout";
 
 export function findCustomFieldIssuesInContent(
   rawContent: string,
@@ -318,7 +325,43 @@ function buildFieldReferencePatterns(fieldName: string, context: CustomFieldRefe
       patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
     }
     if (objectName && apiName) {
-      patterns.push(new RegExp(`\\b${escapeRegExp(objectName)}\\.${escapeRegExp(apiName)}`, "g"));
+      patterns.push(new RegExp(`\\b${escapeRegExp(objectName)}\\.${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    return patterns;
+  }
+
+  if (context === "Field Set") {
+    if (apiName) {
+      patterns.push(new RegExp(`<field>\\s*${escapeRegExp(apiName)}\\s*</field>`, "gi"));
+      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    if (objectName && apiName) {
+      patterns.push(new RegExp(`<field>\\s*${escapeRegExp(objectName)}\\.${escapeRegExp(apiName)}\\s*</field>`, "gi"));
+    }
+    return patterns;
+  }
+
+  if (context === "Record Type") {
+    if (apiName) {
+      patterns.push(new RegExp(`<picklist>\\s*${escapeRegExp(apiName)}\\s*</picklist>`, "gi"));
+      patterns.push(new RegExp(`<field>\\s*${escapeRegExp(apiName)}\\s*</field>`, "gi"));
+      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    if (objectName && apiName) {
+      patterns.push(new RegExp(`\\b${escapeRegExp(objectName)}\\.${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    return patterns;
+  }
+
+  if (context === "Compact Layout") {
+    if (apiName) {
+      patterns.push(new RegExp(`<fields>\\s*${escapeRegExp(apiName)}\\s*</fields>`, "gi"));
+      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    if (objectName && apiName) {
+      patterns.push(
+        new RegExp(`<fields>\\s*${escapeRegExp(objectName)}\\.${escapeRegExp(apiName)}\\s*</fields>`, "gi")
+      );
     }
     return patterns;
   }
