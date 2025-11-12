@@ -24,58 +24,58 @@ Treat provided identifiers as manually removed metadata. Use `Object.Field__c` f
 ✅ No metadata deletions detected in the selected commit range.
 
 # log.elapsed
-⏱️ Completed in {0} seconds.
+⏱️ Completed in %s seconds.
 
 # log.removedHeader
-🗑️ Found {0} removed metadata item(s) within the last {1} commit(s):
+🗑️ Found %d removed metadata item(s) within the last %d commit(s):
 
 # log.depthClamped
-ℹ️ Git history only contained {0} commit(s); requested depth of {1} was clamped.
+ℹ️ Git history only contained %d commit(s); requested depth of %d was clamped.
 
 # log.metadataAnalysisComplete
-🔍 Scanned {0} profile/permission set file(s) for access references.
+🔍 Scanned %d profile/permission set file(s) for access references.
 
 # log.sourceAnalysisComplete
-🧩 Scanned {0} source file(s) (Apex, LWC, Aura) for Apex class references.
+🔍 Scanned %d source file(s) (Apex, LWC, Aura) for Apex class references.
 
 # log.flowAnalysisComplete
-🌊 Scanned {0} Flow definition file(s) for Apex class and field references.
+🔍 Scanned %d Flow definition file(s) for Apex class and field references.
 
 # log.layoutAnalysisComplete
-📐 Scanned {0} layout file(s) for field references.
+🔍 Scanned %d layout file(s) for field references.
 
 # log.flexipageAnalysisComplete
-🪟 Scanned {0} Flexipage file(s) for field references.
+🔍 Scanned %d Flexipage file(s) for field references.
 
 # log.validationAnalysisComplete
-✅ Scanned {0} object metadata file(s) for validation rule field references.
+🔍 Scanned %d object metadata file(s) for validation rule field references.
 
 # log.fieldSetAnalysisComplete
-🧺 Scanned {0} field set file(s) for field references.
+🔍 Scanned %d field set file(s) for field references.
 
 # log.recordTypeAnalysisComplete
-🗂️ Scanned {0} record type file(s) for field references.
+🔍 Scanned %d record type file(s) for field references.
 
 # log.compactLayoutAnalysisComplete
-🧱 Scanned {0} compact layout file(s) for field references.
+🔍 Scanned %d compact layout file(s) for field references.
 
 # log.noIssues
 ✅ No lingering references detected. Metadata integrity looks good!
 
 # log.issuesHeader
-❌ Detected {0} metadata integrity issue(s):
+❌ Detected %d metadata integrity issue(s):
 
 # warn.analysisFailed
-⚠️ Skipped analysis for {0}: {1}
+⚠️ Skipped analysis for %s: %s
 
 # warn.notGitRepo
-⚠️ {0} is not a Git repository. Skipping deletion analysis.
+⚠️ %s is not a Git repository. Skipping deletion analysis.
 
 # warn.gitError
-⚠️ Unable to analyze Git history: {0}
+⚠️ Unable to analyze Git history: %s
 
 # warn.testWithInvalid
-⚠️ Ignoring --test-with value '{0}'. Provide an Apex class name or Object.Field API name.
+⚠️ Ignoring --test-with value '%s'. Provide an Apex class name or Object.Field API name.
 
 # error.issuesFound
-Detected {0} metadata integrity issue(s). See above for details.
+Detected %d metadata integrity issue(s). See above for details.
