@@ -5,6 +5,7 @@ import {
   findIntegrityIssuesInMetadata,
   findCustomFieldIssuesInContent,
   findIntegrityIssuesInSource,
+  createManualRemovedItem,
   RemovedMetadataItem
 } from "../../../src/common/metadata/metadata-integrity.js";
 import { parseMetadataXml } from "../../../src/common/xml/xml-helpers.js";
@@ -40,6 +41,32 @@ describe("metadata-integrity", () => {
       referenceKey: "Obsolete",
       sourceFile: "force-app/main/default/pages/Obsolete.page"
     });
+  });
+
+  it("creates manual Apex class removed items", () => {
+    const result = createManualRemovedItem("LegacyService");
+    expect(result).to.deep.equal({
+      type: "ApexClass",
+      name: "LegacyService",
+      referenceKey: "LegacyService",
+      sourceFile: "manual:LegacyService"
+    });
+  });
+
+  it("creates manual custom field removed items", () => {
+    const result = createManualRemovedItem("Account.Legacy__c");
+    expect(result).to.deep.equal({
+      type: "CustomField",
+      name: "Account.Legacy__c",
+      referenceKey: "Account.Legacy__c",
+      sourceFile: "manual:Account.Legacy__c"
+    });
+  });
+
+  it("returns null for invalid manual identifiers", () => {
+    expect(createManualRemovedItem("")).to.equal(null);
+    expect(createManualRemovedItem("Account.")).to.equal(null);
+    expect(createManualRemovedItem("123Invalid")).to.equal(null);
   });
 
   it("ignores unrelated file paths", () => {

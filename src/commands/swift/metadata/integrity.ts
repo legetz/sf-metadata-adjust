@@ -10,6 +10,7 @@ import { findFilesBySuffix } from "../../../common/helper/file-finder.js";
 import { parseMetadataXml } from "../../../common/xml/xml-helpers.js";
 import {
   buildRemovedMetadataIndex,
+  createManualRemovedItem,
   classifyRemovedMetadataFile,
   CustomFieldReferenceContext,
   findCustomFieldIssuesInContent,
@@ -52,6 +53,10 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
       char: "g",
       description: messages.getMessage("flags.gitDepth.description"),
       default: 5
+    }),
+    "test-with": Flags.string({
+      description: messages.getMessage("flags.testWith.description"),
+      multiple: true
     })
   };
 
@@ -64,6 +69,28 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
     const gitDepth = flags["git-depth"] ?? 5;
 
     const { removedItems, actualDepth } = this.getRemovedMetadataItems(targetDir, gitDepth);
+    const manualIdentifiersRaw = flags["test-with"];
+    const manualIdentifiers = Array.isArray(manualIdentifiersRaw)
+      ? manualIdentifiersRaw
+      : manualIdentifiersRaw
+        ? [manualIdentifiersRaw]
+        : [];
+
+    for (const identifier of manualIdentifiers) {
+      const manualItem = createManualRemovedItem(identifier);
+      if (!manualItem) {
+        this.warn(messages.getMessage("warn.testWithInvalid", [identifier]));
+        continue;
+      }
+
+      const alreadyTracked = removedItems.some(
+        (item) => item.type === manualItem.type && item.referenceKey === manualItem.referenceKey
+      );
+
+      if (!alreadyTracked) {
+        removedItems.push(manualItem);
+      }
+    }
 
     if (actualDepth > 0 && actualDepth < gitDepth) {
       this.log(messages.getMessage("log.depthClamped", [actualDepth, gitDepth]));
