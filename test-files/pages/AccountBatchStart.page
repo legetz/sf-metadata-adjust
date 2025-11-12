@@ -1,0 +1,10 @@
+<apex:page controller="AccountBatchController" setup="true" docType="html-5.0">
+<apex:form >
+    <apex:pageBlock title="Start Account Batch" id="block">
+        <apex:pageMessages />
+        <apex:pageBlockButtons location="top">
+	        <apex:commandButton action="{!start}" value="Run" rerender="block" />
+        </apex:pageBlockButtons>
+    </apex:pageBlock>
+</apex:form>
+</apex:page>
