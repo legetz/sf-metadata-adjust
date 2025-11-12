@@ -312,13 +312,35 @@ describe("metadata-integrity", () => {
         </recordUpdates>
     </flow:interview>`;
 
-    const issues = findCustomFieldIssuesInContent(content, "flows/Example.flow-meta.xml", index, "Flow");
+    const issues = findCustomFieldIssuesInContent(content, "flows/Example.flow-meta.xml", index, "Flow", "Account");
     expect(issues).to.have.lengthOf(1);
     expect(issues[0]).to.include({
       type: "MissingCustomFieldReference",
       missingItem: "Account.Legacy__c",
       referencingFile: "flows/Example.flow-meta.xml"
     });
+  });
+
+  it("ignores flow references to fields from other objects", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Asset.Legacy__c",
+        referenceKey: "Asset.Legacy__c",
+        sourceFile: "force-app/main/default/objects/Asset/fields/Legacy__c.field-meta.xml"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = `<flow:interview xmlns:flow="http://soap.sforce.com/2006/04/metadata">
+        <recordUpdates>
+            <inputAssignments>
+                <field>Asset.Legacy__c</field>
+            </inputAssignments>
+        </recordUpdates>
+    </flow:interview>`;
+
+    const issues = findCustomFieldIssuesInContent(content, "flows/Example.flow-meta.xml", index, "Flow", "Account");
+    expect(issues).to.have.lengthOf(0);
   });
 
   it("detects layout references to removed custom fields", () => {
@@ -342,14 +364,51 @@ describe("metadata-integrity", () => {
             </layoutSections>
         </Layout>`;
 
-    const issues = findCustomFieldIssuesInContent(content, "layouts/Account.layout-meta.xml", index, "Layout");
+    const issues = findCustomFieldIssuesInContent(
+      content,
+      "layouts/Account-Account_Layout.layout-meta.xml",
+      index,
+      "Layout",
+      "Account"
+    );
     expect(issues).to.have.lengthOf(1);
     expect(issues[0]).to.include({
       type: "MissingCustomFieldReference",
       missingItem: "Account.Legacy__c",
-      referencingFile: "layouts/Account.layout-meta.xml"
+      referencingFile: "layouts/Account-Account_Layout.layout-meta.xml"
     });
   });
+
+  it("ignores custom fields when layout object does not match", () => {
+      const removedItems: RemovedMetadataItem[] = [
+        {
+          type: "CustomField",
+          name: "Asset.Legacy__c",
+          referenceKey: "Asset.Legacy__c",
+          sourceFile: "force-app/main/default/objects/Asset/fields/Legacy__c.field-meta.xml"
+        }
+      ];
+      const index = buildRemovedMetadataIndex(removedItems);
+      const content = `<?xml version="1.0" encoding="UTF-8"?>
+          <Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+              <layoutSections>
+                  <layoutColumns>
+                      <layoutItems>
+                          <field>Legacy__c</field>
+                      </layoutItems>
+                  </layoutColumns>
+              </layoutSections>
+          </Layout>`;
+
+      const issues = findCustomFieldIssuesInContent(
+        content,
+        "layouts/Account-Account_Layout.layout-meta.xml",
+        index,
+        "Layout",
+        "Account"
+      );
+      expect(issues).to.have.lengthOf(0);
+    });
 
   it("detects field set references to removed custom fields", () => {
     const removedItems: RemovedMetadataItem[] = [
@@ -372,7 +431,8 @@ describe("metadata-integrity", () => {
       content,
       "objects/Account/fieldSets/Test.fieldSet-meta.xml",
       index,
-      "Field Set"
+      "Field Set",
+      "Account"
     );
     expect(issues).to.have.lengthOf(1);
     expect(issues[0]).to.include({
@@ -435,7 +495,8 @@ describe("metadata-integrity", () => {
       content,
       "objects/Account/compactLayouts/Account.compactLayout-meta.xml",
       index,
-      "Compact Layout"
+      "Compact Layout",
+      "Account"
     );
     expect(issues).to.have.lengthOf(1);
     expect(issues[0]).to.include({
@@ -463,7 +524,13 @@ describe("metadata-integrity", () => {
             </validationRules>
         </CustomObject>`;
 
-    const issues = findCustomFieldIssuesInContent(content, "objects/Account.object-meta.xml", index, "Validation Rule");
+    const issues = findCustomFieldIssuesInContent(
+      content,
+      "objects/Account.object-meta.xml",
+      index,
+      "Validation Rule",
+      "Account"
+    );
     expect(issues).to.have.lengthOf(1);
     expect(issues[0]).to.include({
       type: "MissingCustomFieldReference",
@@ -493,7 +560,8 @@ describe("metadata-integrity", () => {
       content,
       "objects/Account/recordTypes/Consumer.recordType-meta.xml",
       index,
-      "Record Type"
+      "Record Type",
+      "Account"
     );
     expect(issues).to.have.lengthOf(1);
     expect(issues[0]).to.include({

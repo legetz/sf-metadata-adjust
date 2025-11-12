@@ -163,9 +163,10 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
         try {
           const xml = await fs.readFile(flowFile, "utf8");
           const relativePath = path.relative(targetDir, flowFile) || path.basename(flowFile);
+          const flowObjects = this.extractFlowObjects(xml);
           const flowIssues = [
             ...findIntegrityIssuesInSource(xml, relativePath, removedIndex),
-            ...findCustomFieldIssuesInContent(xml, relativePath, removedIndex, "Flow")
+            ...findCustomFieldIssuesInContent(xml, relativePath, removedIndex, "Flow", flowObjects)
           ];
           issues.push(...flowIssues);
         } catch (error) {
@@ -406,12 +407,55 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
       try {
         const rawContent = await fs.readFile(file, "utf8");
         const relativePath = path.relative(targetDir, file) || path.basename(file);
-        const fileIssues = findCustomFieldIssuesInContent(rawContent, relativePath, removedIndex, context);
+        const metadataObject = this.extractObjectNameFromFile(file);
+        const fileIssues = findCustomFieldIssuesInContent(
+          rawContent,
+          relativePath,
+          removedIndex,
+          context,
+          metadataObject
+        );
         issues.push(...fileIssues);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.warn(messages.getMessage("warn.analysisFailed", [file, message]));
       }
     }
+  }
+
+  private extractObjectNameFromFile(filePath: string): string | undefined {
+    const normalized = filePath.split(path.sep).join("/");
+
+    const dirMatch = normalized.match(/\/objects\/([^/]+)\//i);
+    if (dirMatch) {
+      return dirMatch[1];
+    }
+
+    const objectFileMatch = normalized.match(/\/objects\/([^/.]+)\.object-meta\.xml$/i);
+    if (objectFileMatch) {
+      return objectFileMatch[1];
+    }
+
+    const layoutMatch = normalized.match(/\/layouts\/([^/]+)-[^/]+\.layout-meta\.xml$/i);
+    if (layoutMatch) {
+      return layoutMatch[1];
+    }
+
+    return undefined;
+  }
+
+  private extractFlowObjects(xml: string): string[] {
+    const matches = xml.match(/<\s*(?:object|objectType)\s*>([^<]+)<\/\s*(?:object|objectType)\s*>/gi) ?? [];
+    const objects = new Set<string>();
+
+    for (const match of matches) {
+      const valueMatch = match.match(/>([^<]+)</);
+      const candidate = valueMatch?.[1]?.trim();
+      if (candidate) {
+        objects.add(candidate);
+      }
+    }
+
+    return Array.from(objects);
   }
 }

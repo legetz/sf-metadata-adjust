@@ -212,7 +212,8 @@ export function findCustomFieldIssuesInContent(
   rawContent: string,
   filePath: string,
   removedIndex: RemovedMetadataIndex,
-  context: CustomFieldReferenceContext
+  context: CustomFieldReferenceContext,
+  metadataObject?: string | string[]
 ): IntegrityIssue[] {
   const fieldIndex = removedIndex.get("CustomField");
 
@@ -222,9 +223,18 @@ export function findCustomFieldIssuesInContent(
 
   const issues: IntegrityIssue[] = [];
   const content = rawContent ?? "";
+  const scopesRaw = metadataObject ? (Array.isArray(metadataObject) ? metadataObject : [metadataObject]) : undefined;
+  const objectScopes = scopesRaw && scopesRaw.length > 0 ? scopesRaw : undefined;
 
   for (const fieldName of fieldIndex.keys()) {
+    const [objectName] = splitFieldReference(fieldName);
+
+    if (objectScopes && objectName && !objectScopes.some((scope) => equalsIgnoreCase(scope, objectName))) {
+      continue;
+    }
+
     const patterns = buildFieldReferencePatterns(fieldName, context);
+
     if (patterns.some((pattern) => pattern.test(content))) {
       issues.push({
         type: "MissingCustomFieldReference",
@@ -431,4 +441,8 @@ export function createManualRemovedItem(identifier: string | undefined | null): 
     referenceKey: trimmed,
     sourceFile: `manual:${trimmed}`
   };
+}
+
+function equalsIgnoreCase(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
 }
