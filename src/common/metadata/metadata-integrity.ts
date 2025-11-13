@@ -310,9 +310,9 @@ function buildFieldReferencePatterns(fieldName: string, context: CustomFieldRefe
   const patterns: RegExp[] = [];
 
   if (context === "Flow") {
-    patterns.push(new RegExp(`\\b${escapeRegExp(fieldName)}\\b`, "g"));
+    patterns.push(new RegExp(`\\b${escapeRegExp(fieldName)}\\b`, "gi"));
     if (apiName) {
-      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
+      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "gi"));
     }
     return patterns;
   }

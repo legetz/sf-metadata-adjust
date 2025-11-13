@@ -357,6 +357,34 @@ describe("metadata-integrity", () => {
     });
   });
 
+  it("detects flow references regardless of case", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Account.Legacy__c",
+        referenceKey: "Account.Legacy__c",
+        sourceFile: "force-app/main/default/objects/Account/fields/Legacy__c.field-meta.xml"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = `<flow:interview xmlns:flow="http://soap.sforce.com/2006/04/metadata">
+        <recordUpdates>
+            <inputAssignments>
+                <field>account.legacy__c</field>
+            </inputAssignments>
+        </recordUpdates>
+    </flow:interview>`;
+
+    const issues = findCustomFieldIssuesInContent(content, "flows/Example.flow-meta.xml", index, "Flow", "Account");
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "MissingCustomFieldReference",
+      missingItem: "Account.Legacy__c",
+      referencingFile: "flows/Example.flow-meta.xml"
+    });
+  });
+
   it("ignores flow references to fields from other objects", () => {
     const removedItems: RemovedMetadataItem[] = [
       {
