@@ -268,7 +268,8 @@ describe("metadata-integrity", () => {
     ];
 
     const index = buildRemovedMetadataIndex(removedItems);
-    const content = '<apex:page controller="LegacyService"><apex:outputText value="{!LegacyService.someMethod}"/></apex:page>';
+    const content =
+      '<apex:page controller="LegacyService"><apex:outputText value="{!LegacyService.someMethod}"/></apex:page>';
     const issues = findIntegrityIssuesInSource(content, "pages/AccountBatchStart.page", index);
 
     expect(issues).to.have.lengthOf(1);
