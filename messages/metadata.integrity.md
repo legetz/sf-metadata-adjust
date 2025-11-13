@@ -39,7 +39,7 @@ Treat provided field API names (`Object.Field__c`) as manually removed for integ
 🔍 Scanned %d profile/permission set file(s) for access references.
 
 # log.sourceAnalysisComplete
-🔍 Scanned %d source file(s) (Apex, LWC, Aura) for Apex class references.
+🔍 Scanned %d source file(s) (Apex, Visualforce, LWC, Aura) for Apex class references.
 
 # log.flowAnalysisComplete
 🔍 Scanned %d Flow definition file(s) for Apex class and field references.

@@ -328,6 +328,7 @@ Returns a summary of deleted metadata and outstanding references. Use `--json` t
 - Deleted Visualforce pages that remain enabled via `pageAccesses`
 - Apex classes and triggers that reference removed Apex classes
 - Lightning Web Components (`lwc/*`) and Aura components (`aura/*`) that import or declare removed Apex classes
+- Visualforce pages and components (`*.page`, `*.component`) whose controllers or markup reference removed Apex classes
 - Flow definitions (`*.flow-meta.xml`) that invoke removed Apex classes or reference removed custom fields
 - Formula fields (`*.field-meta.xml`) whose formulas reference removed custom fields
 - Field sets (`*.fieldSet-meta.xml`) that list removed custom fields

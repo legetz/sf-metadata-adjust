@@ -257,6 +257,28 @@ describe("metadata-integrity", () => {
     });
   });
 
+  it("detects Apex class references in Visualforce pages", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "ApexClass",
+        name: "LegacyService",
+        referenceKey: "LegacyService",
+        sourceFile: "force-app/main/default/classes/LegacyService.cls"
+      }
+    ];
+
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = '<apex:page controller="LegacyService"><apex:outputText value="{!LegacyService.someMethod}"/></apex:page>';
+    const issues = findIntegrityIssuesInSource(content, "pages/AccountBatchStart.page", index);
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "DanglingApexClassReference",
+      missingItem: "LegacyService",
+      referencingFile: "pages/AccountBatchStart.page"
+    });
+  });
+
   it("detects Apex class references in Aura markup", () => {
     const removedItems: RemovedMetadataItem[] = [
       {

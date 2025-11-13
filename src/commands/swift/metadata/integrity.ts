@@ -360,6 +360,18 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
       findFilesBySuffix(targetDir, suffix).forEach((file) => files.add(file));
     });
 
+    findFilesBySuffix(targetDir, ".page").forEach((file) => {
+      if (file.includes(`${path.sep}pages${path.sep}`)) {
+        files.add(file);
+      }
+    });
+
+    findFilesBySuffix(targetDir, ".component").forEach((file) => {
+      if (file.includes(`${path.sep}components${path.sep}`)) {
+        files.add(file);
+      }
+    });
+
     findFilesBySuffix(targetDir, ".html").forEach((file) => {
       if (file.includes(`${path.sep}lwc${path.sep}`) || file.includes(`${path.sep}aura${path.sep}`)) {
         files.add(file);
