@@ -9,7 +9,6 @@ export type IntegrityReferenceSurface =
   | "flow"
   | "formulaField"
   | "layout"
-  | "flexipage"
   | "validationRule"
   | "fieldSet"
   | "recordType"
@@ -33,7 +32,6 @@ export const METADATA_INTEGRITY_RULES: MetadataIntegrityRule[] = [
       "flow",
       "formulaField",
       "layout",
-      "flexipage",
       "validationRule",
       "fieldSet",
       "recordType",

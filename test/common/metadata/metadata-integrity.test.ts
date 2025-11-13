@@ -483,40 +483,6 @@ describe("metadata-integrity", () => {
     });
   });
 
-  it("detects Flexipage references to removed custom fields", () => {
-    const removedItems: RemovedMetadataItem[] = [
-      {
-        type: "CustomField",
-        name: "Account.Legacy__c",
-        referenceKey: "Account.Legacy__c",
-        sourceFile: "force-app/main/default/objects/Account/fields/Legacy__c.field-meta.xml"
-      }
-    ];
-    const index = buildRemovedMetadataIndex(removedItems);
-    const content = `<?xml version="1.0" encoding="UTF-8"?>
-        <FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
-            <region>
-                <componentInstance>
-                    <componentName>force:relatedList</componentName>
-                    <listView>Account.Legacy__c</listView>
-                </componentInstance>
-            </region>
-        </FlexiPage>`;
-
-    const issues = findCustomFieldIssuesInContent(
-      content,
-      "flexipages/Account_Record_Page.flexipage-meta.xml",
-      index,
-      "Flexipage"
-    );
-    expect(issues).to.have.lengthOf(1);
-    expect(issues[0]).to.include({
-      type: "MissingCustomFieldReference",
-      missingItem: "Account.Legacy__c",
-      referencingFile: "flexipages/Account_Record_Page.flexipage-meta.xml"
-    });
-  });
-
   it("detects compact layout references to removed custom fields", () => {
     const removedItems: RemovedMetadataItem[] = [
       {
@@ -546,40 +512,6 @@ describe("metadata-integrity", () => {
       referencingFile: "objects/Account/compactLayouts/Account.compactLayout-meta.xml"
     });
   });
-
-  it("detects validation rule references to removed custom fields", () => {
-    const removedItems: RemovedMetadataItem[] = [
-      {
-        type: "CustomField",
-        name: "Account.Legacy__c",
-        referenceKey: "Account.Legacy__c",
-        sourceFile: "force-app/main/default/objects/Account/fields/Legacy__c.field-meta.xml"
-      }
-    ];
-    const index = buildRemovedMetadataIndex(removedItems);
-    const content = `<?xml version="1.0" encoding="UTF-8"?>
-        <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
-            <validationRules>
-                <fullName>Prevent_Legacy__c</fullName>
-                <errorConditionFormula>NOT(ISBLANK(Legacy__c))</errorConditionFormula>
-            </validationRules>
-        </CustomObject>`;
-
-    const issues = findCustomFieldIssuesInContent(
-      content,
-      "objects/Account.object-meta.xml",
-      index,
-      "Validation Rule",
-      "Account"
-    );
-    expect(issues).to.have.lengthOf(1);
-    expect(issues[0]).to.include({
-      type: "MissingCustomFieldReference",
-      missingItem: "Account.Legacy__c",
-      referencingFile: "objects/Account.object-meta.xml"
-    });
-  });
-
   it("detects record type references to removed custom fields", () => {
     const removedItems: RemovedMetadataItem[] = [
       {

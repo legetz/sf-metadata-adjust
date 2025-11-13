@@ -206,7 +206,6 @@ export type CustomFieldReferenceContext =
   | "Flow"
   | "Formula Field"
   | "Layout"
-  | "Flexipage"
   | "Validation Rule"
   | "Field Set"
   | "Record Type"
@@ -331,14 +330,6 @@ function buildFieldReferencePatterns(fieldName: string, context: CustomFieldRefe
   if (context === "Layout") {
     if (apiName) {
       patterns.push(new RegExp(`<field>\\s*${escapeRegExp(apiName)}\\s*</field>`, "gi"));
-      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
-    }
-    return patterns;
-  }
-
-  if (context === "Flexipage") {
-    patterns.push(new RegExp(`\\b${escapeRegExp(fieldName)}\\b`, "g"));
-    if (apiName) {
       patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
     }
     return patterns;

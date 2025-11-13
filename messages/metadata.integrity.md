@@ -50,9 +50,6 @@ Treat provided field API names (`Object.Field__c`) as manually removed for integ
 # log.layoutAnalysisComplete
 🔍 Scanned %d layout file(s) for field references.
 
-# log.flexipageAnalysisComplete
-🔍 Scanned %d Flexipage file(s) for field references.
-
 # log.validationAnalysisComplete
 🔍 Scanned %d object metadata file(s) for validation rule field references.
 

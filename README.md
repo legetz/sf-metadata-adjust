@@ -334,7 +334,6 @@ Returns a summary of deleted metadata and outstanding references. Use `--json` t
 - Layouts (`*.layout-meta.xml`) that still list removed custom fields
 - Compact layouts (`*.compactLayout-meta.xml`) that display removed custom fields
 - Record types (`*.recordType-meta.xml`) that reference removed custom fields in picklists or field selections
-- Flexipages (`*.flexipage-meta.xml`) that reference removed custom fields
 - Validation rules in object metadata (`*.object-meta.xml`) that reference removed custom fields
 - Profiles and Permission Sets located anywhere within the target directory
 

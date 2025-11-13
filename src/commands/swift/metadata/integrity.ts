@@ -196,12 +196,6 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
       await this.processCustomFieldFileSet(layoutFiles, targetDir, removedIndex, "Layout", issues);
     }
 
-    if (surfacesToCheck.has("flexipage")) {
-      const flexipageFiles = this.collectFlexipageFiles(targetDir);
-      this.log(messages.getMessage("log.flexipageAnalysisComplete", [flexipageFiles.length]));
-      await this.processCustomFieldFileSet(flexipageFiles, targetDir, removedIndex, "Flexipage", issues);
-    }
-
     if (surfacesToCheck.has("validationRule")) {
       const validationRuleFiles = this.collectValidationRuleFiles(targetDir);
       this.log(messages.getMessage("log.validationAnalysisComplete", [validationRuleFiles.length]));
@@ -385,10 +379,6 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
 
   private collectLayoutFiles(targetDir: string): string[] {
     return findFilesBySuffix(targetDir, ".layout-meta.xml");
-  }
-
-  private collectFlexipageFiles(targetDir: string): string[] {
-    return findFilesBySuffix(targetDir, ".flexipage-meta.xml");
   }
 
   private collectValidationRuleFiles(targetDir: string): string[] {
