@@ -25,7 +25,7 @@ describe("common/helper/backup", () => {
   describe("createFileBackup", () => {
     it("should create a backup directory with timestamp", () => {
       const files = [testFile1, testFile2];
-      const backupDir = createFileBackup(files, testDir);
+      const backupDir = createFileBackup(files, testDir, { silent: true });
 
       expect(fs.existsSync(backupDir)).to.be.true;
       expect(path.basename(backupDir)).to.match(/^\.backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/);
@@ -33,7 +33,7 @@ describe("common/helper/backup", () => {
 
     it("should backup all specified files", () => {
       const files = [testFile1, testFile2];
-      const backupDir = createFileBackup(files, testDir);
+      const backupDir = createFileBackup(files, testDir, { silent: true });
 
       const backedUpFile1 = path.join(backupDir, "test1.txt");
       const backedUpFile2 = path.join(backupDir, "subdir", "test2.txt");
@@ -44,7 +44,7 @@ describe("common/helper/backup", () => {
 
     it("should preserve file contents in backup", () => {
       const files = [testFile1, testFile2];
-      const backupDir = createFileBackup(files, testDir);
+      const backupDir = createFileBackup(files, testDir, { silent: true });
 
       const backedUpFile1 = path.join(backupDir, "test1.txt");
       const backedUpFile2 = path.join(backupDir, "subdir", "test2.txt");
@@ -58,7 +58,7 @@ describe("common/helper/backup", () => {
 
     it("should preserve directory structure in backup", () => {
       const files = [testFile1, testFile2];
-      const backupDir = createFileBackup(files, testDir);
+      const backupDir = createFileBackup(files, testDir, { silent: true });
 
       const backedUpSubdir = path.join(backupDir, "subdir");
       expect(fs.existsSync(backedUpSubdir)).to.be.true;
@@ -67,7 +67,7 @@ describe("common/helper/backup", () => {
 
     it("should handle empty file list", () => {
       const files: string[] = [];
-      const backupDir = createFileBackup(files, testDir);
+      const backupDir = createFileBackup(files, testDir, { silent: true });
 
       expect(fs.existsSync(backupDir)).to.be.true;
       expect(fs.readdirSync(backupDir).length).to.equal(0);
@@ -75,7 +75,7 @@ describe("common/helper/backup", () => {
 
     it("should return the backup directory path", () => {
       const files = [testFile1];
-      const backupDir = createFileBackup(files, testDir);
+      const backupDir = createFileBackup(files, testDir, { silent: true });
 
       expect(backupDir).to.be.a("string");
       expect(backupDir).to.include(".backup-");
@@ -88,7 +88,7 @@ describe("common/helper/backup", () => {
       fs.writeFileSync(nestedFile, "nested content");
 
       const files = [nestedFile];
-      const backupDir = createFileBackup(files, testDir);
+      const backupDir = createFileBackup(files, testDir, { silent: true });
 
       const backedUpNested = path.join(backupDir, "level1", "level2", "level3", "test.txt");
       expect(fs.existsSync(backedUpNested)).to.be.true;
@@ -100,7 +100,7 @@ describe("common/helper/backup", () => {
       fs.writeFileSync(testFile3, "test content 3");
 
       const files = [testFile1, testFile3];
-      const backupDir = createFileBackup(files, testDir);
+      const backupDir = createFileBackup(files, testDir, { silent: true });
 
       const backedUpFile1 = path.join(backupDir, "test1.txt");
       const backedUpFile3 = path.join(backupDir, "test3.txt");
@@ -113,16 +113,16 @@ describe("common/helper/backup", () => {
       const nonExistentFile = path.join(testDir, "nonexistent.txt");
       const files = [nonExistentFile];
 
-      expect(() => createFileBackup(files, testDir)).to.throw();
+      expect(() => createFileBackup(files, testDir, { silent: true })).to.throw();
     });
 
     it("should create unique backup directories for consecutive calls", (done) => {
       const files = [testFile1];
-      const backupDir1 = createFileBackup(files, testDir);
+      const backupDir1 = createFileBackup(files, testDir, { silent: true });
 
       // Wait a moment to ensure different timestamp
       setTimeout(() => {
-        const backupDir2 = createFileBackup(files, testDir);
+        const backupDir2 = createFileBackup(files, testDir, { silent: true });
 
         expect(backupDir1).to.not.equal(backupDir2);
         expect(fs.existsSync(backupDir1)).to.be.true;

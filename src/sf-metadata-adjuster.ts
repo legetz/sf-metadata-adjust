@@ -21,11 +21,16 @@ interface ProcessingStats {
   unchangedFiles: string[];
 }
 
+interface SfMetadataAdjusterOptions {
+  silent?: boolean;
+}
+
 export class SfMetadataAdjuster {
   private folderPath: string;
   private includeTypes: string[];
   private excludeTypes: string[];
   private allowAll: boolean;
+  private isSilent: boolean;
   private specificFiles: string[] | null = null;
   private stats: ProcessingStats = {
     processed: 0,
@@ -37,9 +42,16 @@ export class SfMetadataAdjuster {
     unchangedFiles: []
   };
 
-  constructor(folderPath: string, includeTypes: string[] = [], excludeTypes: string[] = [], allowAll: boolean = false) {
+  constructor(
+    folderPath: string,
+    includeTypes: string[] = [],
+    excludeTypes: string[] = [],
+    allowAll: boolean = false,
+    options: SfMetadataAdjusterOptions = {}
+  ) {
     this.folderPath = folderPath;
     this.allowAll = allowAll;
+    this.isSilent = options.silent ?? process.env.NODE_ENV === "test";
 
     this.includeTypes = includeTypes.map((t) => {
       // Normalize type names - ensure they end with -meta.xml
@@ -67,6 +79,17 @@ export class SfMetadataAdjuster {
 
     // Validate that include types are whitelisted (unless --all is specified)
     this.validateWhitelistedTypes();
+  }
+
+  private log(...args: unknown[]): void {
+    if (this.isSilent) {
+      return;
+    }
+    console.log(...args);
+  }
+
+  private error(...args: unknown[]): void {
+    console.error(...args);
   }
 
   /**
@@ -198,7 +221,7 @@ export class SfMetadataAdjuster {
         }
       }
     } catch (error) {
-      console.error(`❌ Error reading directory ${dir}: ${error}`);
+      this.error(`❌ Error reading directory ${dir}: ${error}`);
     }
 
     return files;
@@ -313,7 +336,7 @@ export class SfMetadataAdjuster {
         xmlObject = await parseMetadataXml(prefixedXml);
       } catch (parseError) {
         // XML is not valid - skip this file with a warning
-        console.log(`⚠️  Skipped (invalid XML): ${relativePath}`);
+        this.log(`⚠️  Skipped (invalid XML): ${relativePath}`);
         this.stats.skipped++;
         return false;
       }
@@ -340,7 +363,7 @@ export class SfMetadataAdjuster {
       if (needsUpdate) {
         // Write back to the same file (replace original)
         fs.writeFileSync(filePath, sortedXml, "utf8");
-        console.log(`✏️  Modified: ${relativePath}`);
+        this.log(`✏️  Modified: ${relativePath}`);
         this.stats.modified++;
         this.stats.files.push(relativePath);
       } else {
@@ -352,7 +375,7 @@ export class SfMetadataAdjuster {
 
       return true;
     } catch (error) {
-      console.error(`❌ Error processing ${relativePath}: ${error}`);
+      this.error(`❌ Error processing ${relativePath}: ${error}`);
       this.stats.errors++;
       return false;
     }
@@ -375,11 +398,11 @@ export class SfMetadataAdjuster {
       // Filter specific files
       return this.specificFiles.filter((file) => {
         if (!fs.existsSync(file)) {
-          console.log(`⚠️  File not found, skipping: ${path.relative(this.folderPath, file)}`);
+          this.log(`⚠️  File not found, skipping: ${path.relative(this.folderPath, file)}`);
           return false;
         }
         if (!file.endsWith("-meta.xml")) {
-          console.log(`⚠️  Not a metadata file, skipping: ${path.relative(this.folderPath, file)}`);
+          this.log(`⚠️  Not a metadata file, skipping: ${path.relative(this.folderPath, file)}`);
           return false;
         }
         // Check exclude list
@@ -418,29 +441,29 @@ export class SfMetadataAdjuster {
 
       if (this.specificFiles !== null) {
         if (this.specificFiles.length === 0) {
-          console.log("ℹ️  No files specified for processing");
+          this.log("ℹ️  No files specified for processing");
           return;
         }
       } else {
-        console.log(`🔍 Scanning for *-meta.xml files in: ${this.folderPath}`);
+        this.log(`🔍 Scanning for *-meta.xml files in: ${this.folderPath}`);
       }
 
       const metadataFiles = this.getFilesToProcess();
 
       if (metadataFiles.length === 0) {
         if (this.specificFiles !== null) {
-          console.log("ℹ️  No valid metadata files to process");
+          this.log("ℹ️  No valid metadata files to process");
         } else {
-          console.log("ℹ️  No *-meta.xml files found in the specified directory");
+          this.log("ℹ️  No *-meta.xml files found in the specified directory");
         }
         return;
       }
 
-      console.log(`📋 ${this.specificFiles !== null ? "Processing" : "Found"} ${metadataFiles.length} metadata files`);
+      this.log(`📋 ${this.specificFiles !== null ? "Processing" : "Found"} ${metadataFiles.length} metadata files`);
 
       // Create backup if requested
       if (createBackup) {
-        createFileBackup(metadataFiles, this.folderPath);
+        createFileBackup(metadataFiles, this.folderPath, { silent: this.isSilent });
       }
 
       // Process each file
@@ -451,7 +474,7 @@ export class SfMetadataAdjuster {
       // Display summary
       this.displaySummary();
     } catch (error) {
-      console.error("❌ Error processing metadata files:", error);
+      this.error("❌ Error processing metadata files:", error);
       process.exit(1);
     }
   }
@@ -460,23 +483,23 @@ export class SfMetadataAdjuster {
    * Display processing summary
    */
   private displaySummary(): void {
-    console.log("\n" + "=".repeat(60));
-    console.log("📊 ADJUSTMENT SUMMARY");
-    console.log("=".repeat(60));
-    console.log(`📁 Total files checked: ${this.stats.processed} files`);
-    console.log(`✏️ Modified: ${this.stats.modified} files`);
-    console.log(`✅ Already good: ${this.stats.unchanged} files`);
+    this.log("\n" + "=".repeat(60));
+    this.log("📊 ADJUSTMENT SUMMARY");
+    this.log("=".repeat(60));
+    this.log(`📁 Total files checked: ${this.stats.processed} files`);
+    this.log(`✏️ Modified: ${this.stats.modified} files`);
+    this.log(`✅ Already good: ${this.stats.unchanged} files`);
     if (this.stats.skipped > 0) {
-      console.log(`⏭️ Skipped: ${this.stats.skipped} files`);
+      this.log(`⏭️ Skipped: ${this.stats.skipped} files`);
     }
-    console.log(`⚠️ Errors encountered: ${this.stats.errors} files`);
+    this.log(`⚠️ Errors encountered: ${this.stats.errors} files`);
 
     if (this.stats.modified > 0) {
-      console.log(
+      this.log(
         `\n🎉 Successfully adjusted ${this.stats.modified} metadata file${this.stats.modified !== 1 ? "s" : ""}!`
       );
     } else if (this.stats.unchanged > 0) {
-      console.log(`\n✨ All metadata files are already good!`);
+      this.log(`\n✨ All metadata files are already good!`);
     }
   }
 }
