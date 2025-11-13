@@ -58,7 +58,7 @@ describe("metadata-adjust", () => {
     tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "metadata-adjust-"));
     copyDirectory(originalRoot, tempRoot);
 
-    const adjuster = new SfMetadataAdjuster(tempRoot, [], [], false, { silent: true });
+    const adjuster = new SfMetadataAdjuster(tempRoot, { silent: true });
     await adjuster.process(false);
 
     const expectedFiles = collectMetadataFiles(expectedRoot)

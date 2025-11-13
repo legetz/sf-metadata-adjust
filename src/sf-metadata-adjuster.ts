@@ -23,6 +23,9 @@ interface ProcessingStats {
 
 interface SfMetadataAdjusterOptions {
   silent?: boolean;
+  includeTypes?: string[];
+  excludeTypes?: string[];
+  allowAll?: boolean;
 }
 
 export class SfMetadataAdjuster {
@@ -42,16 +45,12 @@ export class SfMetadataAdjuster {
     unchangedFiles: []
   };
 
-  constructor(
-    folderPath: string,
-    includeTypes: string[] = [],
-    excludeTypes: string[] = [],
-    allowAll: boolean = false,
-    options: SfMetadataAdjusterOptions = {}
-  ) {
+  constructor(folderPath: string, options: SfMetadataAdjusterOptions = {}) {
     this.folderPath = folderPath;
+    const { includeTypes = [], excludeTypes = [], allowAll = false, silent } = options;
+
     this.allowAll = allowAll;
-    this.isSilent = options.silent ?? process.env.NODE_ENV === "test";
+    this.isSilent = silent ?? process.env.NODE_ENV === "test";
 
     this.includeTypes = includeTypes.map((t) => {
       // Normalize type names - ensure they end with -meta.xml

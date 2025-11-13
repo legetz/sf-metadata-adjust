@@ -137,7 +137,11 @@ export default class MetadataAdjust extends SfCommand<void> {
     }
 
     try {
-      const adjuster = new SfMetadataAdjuster(targetDir, includeTypes, excludeTypes, flags.all);
+      const adjuster = new SfMetadataAdjuster(targetDir, {
+        includeTypes,
+        excludeTypes,
+        allowAll: flags.all
+      });
 
       // If git-depth is specified, set specific files to process
       if (flags["git-depth"] > 0) {
