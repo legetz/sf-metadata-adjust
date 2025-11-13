@@ -7,6 +7,7 @@ export type IntegrityReferenceSurface =
   | "lwc"
   | "aura"
   | "flow"
+  | "formulaField"
   | "layout"
   | "flexipage"
   | "validationRule"
@@ -30,6 +31,7 @@ export const METADATA_INTEGRITY_RULES: MetadataIntegrityRule[] = [
       "profile",
       "permissionSet",
       "flow",
+      "formulaField",
       "layout",
       "flexipage",
       "validationRule",

@@ -266,7 +266,7 @@ Default output is human-readable and includes a summary plus any `.rej` file pat
 
 ## Command: `sf swift metadata integrity`
 
-Cross-checks recent Git history for deleted metadata (Apex classes, Visualforce pages, custom fields) and reports lingering references across Profiles, Permission Sets, source code, flows, layouts, and more.
+Cross-checks recent Git history for deleted metadata (Apex classes, Visualforce pages, custom fields) and reports lingering references across Profiles, Permission Sets, source code, flows, formulas, layouts, and more.
 
 ### Quick start
 
@@ -329,6 +329,7 @@ Returns a summary of deleted metadata and outstanding references. Use `--json` t
 - Apex classes and triggers that reference removed Apex classes
 - Lightning Web Components (`lwc/*`) and Aura components (`aura/*`) that import or declare removed Apex classes
 - Flow definitions (`*.flow-meta.xml`) that invoke removed Apex classes or reference removed custom fields
+- Formula fields (`*.field-meta.xml`) whose formulas reference removed custom fields
 - Field sets (`*.fieldSet-meta.xml`) that list removed custom fields
 - Layouts (`*.layout-meta.xml`) that still list removed custom fields
 - Compact layouts (`*.compactLayout-meta.xml`) that display removed custom fields

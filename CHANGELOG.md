@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🧪 **Manual Integrity Simulation**: Added `--test-with-class` and `--test-with-field` flags to emulate deleted Apex classes or custom fields during integrity scans.
 
 ### Changed
-- 🔍 **Integrity Coverage**: The metadata integrity scan now inspects Apex source, LWC/Aura components, Flow definitions, layouts, flexipages, validation rules, field sets, record types, and compact layouts for lingering references to deleted Apex classes, Visualforce pages, and custom fields.
+- 🔍 **Integrity Coverage**: The metadata integrity scan now inspects Apex source, LWC/Aura components, Flow definitions, formula fields, layouts, flexipages, validation rules, field sets, record types, and compact layouts for lingering references to deleted Apex classes, Visualforce pages, and custom fields.
 - 🎯 **Integrity Precision**: Object-aware scanning now reduces false positives across flows, layouts, field sets, record types, compact layouts, and validation rules by matching references to their owning objects.
 
 ## [1.0.12] - 2025-11-11

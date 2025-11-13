@@ -204,6 +204,7 @@ export function findIntegrityIssuesInSource(
 
 export type CustomFieldReferenceContext =
   | "Flow"
+  | "Formula Field"
   | "Layout"
   | "Flexipage"
   | "Validation Rule"
@@ -311,6 +312,16 @@ function buildFieldReferencePatterns(fieldName: string, context: CustomFieldRefe
 
   if (context === "Flow") {
     patterns.push(new RegExp(`\\b${escapeRegExp(fieldName)}\\b`, "g"));
+    if (apiName) {
+      patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
+    }
+    return patterns;
+  }
+
+  if (context === "Formula Field") {
+    if (objectName && apiName) {
+      patterns.push(new RegExp(`\\b${escapeRegExp(objectName)}\\.${escapeRegExp(apiName)}\\b`, "g"));
+    }
     if (apiName) {
       patterns.push(new RegExp(`\\b${escapeRegExp(apiName)}\\b`, "g"));
     }

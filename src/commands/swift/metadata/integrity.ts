@@ -184,6 +184,12 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
       }
     }
 
+    if (surfacesToCheck.has("formulaField")) {
+      const fieldFiles = this.collectCustomFieldFiles(targetDir);
+      this.log(messages.getMessage("log.formulaAnalysisComplete", [fieldFiles.length]));
+      await this.processFormulaFieldFileSet(fieldFiles, targetDir, removedIndex, issues);
+    }
+
     if (surfacesToCheck.has("layout")) {
       const layoutFiles = this.collectLayoutFiles(targetDir);
       this.log(messages.getMessage("log.layoutAnalysisComplete", [layoutFiles.length]));
@@ -373,6 +379,10 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
     return findFilesBySuffix(targetDir, ".flow-meta.xml");
   }
 
+  private collectCustomFieldFiles(targetDir: string): string[] {
+    return findFilesBySuffix(targetDir, ".field-meta.xml");
+  }
+
   private collectLayoutFiles(targetDir: string): string[] {
     return findFilesBySuffix(targetDir, ".layout-meta.xml");
   }
@@ -431,6 +441,47 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
     }
   }
 
+  private async processFormulaFieldFileSet(
+    files: string[],
+    targetDir: string,
+    removedIndex: ReturnType<typeof buildRemovedMetadataIndex>,
+    issues: IntegrityIssue[]
+  ): Promise<void> {
+    const fieldIndex = removedIndex.get("CustomField");
+    if (!fieldIndex || fieldIndex.size === 0) {
+      return;
+    }
+
+    for (const file of files) {
+      try {
+        const rawContent = await fs.readFile(file, "utf8");
+        const formula = this.extractFormulaFromCustomField(rawContent);
+        if (!formula) {
+          continue;
+        }
+
+        const relativePath = path.relative(targetDir, file) || path.basename(file);
+        const metadataObject = this.extractObjectNameFromFile(file);
+        const fieldReference = this.extractFieldReferenceFromFile(file);
+        const formulaIssues = findCustomFieldIssuesInContent(
+          formula,
+          relativePath,
+          removedIndex,
+          "Formula Field",
+          metadataObject
+        );
+
+        const filtered = fieldReference
+          ? formulaIssues.filter((issue) => issue.missingItem !== fieldReference)
+          : formulaIssues;
+        issues.push(...filtered);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.warn(messages.getMessage("warn.analysisFailed", [file, message]));
+      }
+    }
+  }
+
   private extractObjectNameFromFile(filePath: string): string | undefined {
     const normalized = filePath.split(path.sep).join("/");
 
@@ -450,6 +501,15 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
     }
 
     return undefined;
+  }
+
+  private extractFieldReferenceFromFile(filePath: string): string | undefined {
+    const normalized = filePath.split(path.sep).join("/");
+    const match = normalized.match(/\/objects\/([^/]+)\/fields\/([^/]+)\.field-meta\.xml$/i);
+    if (!match) {
+      return undefined;
+    }
+    return `${match[1]}.${match[2]}`;
   }
 
   private extractFlowObjects(xml: string): string[] {
@@ -478,5 +538,26 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
 
   private manualItemAlreadyTracked(removedItems: RemovedMetadataItem[], candidate: RemovedMetadataItem): boolean {
     return removedItems.some((item) => item.type === candidate.type && item.referenceKey === candidate.referenceKey);
+  }
+
+  private extractFormulaFromCustomField(rawContent: string): string | undefined {
+    const match = rawContent.match(/<formula>([\s\S]*?)<\/formula>/i);
+    if (!match) {
+      return undefined;
+    }
+
+    let formula = match[1]?.trim() ?? "";
+    if (!formula) {
+      return undefined;
+    }
+
+    if (formula.startsWith("<![CDATA[")) {
+      formula = formula
+        .slice(9)
+        .replace(/\]\]>$/, "")
+        .trim();
+    }
+
+    return formula.length > 0 ? formula : undefined;
   }
 }

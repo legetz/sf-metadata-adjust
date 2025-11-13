@@ -44,6 +44,9 @@ Treat provided field API names (`Object.Field__c`) as manually removed for integ
 # log.flowAnalysisComplete
 🔍 Scanned %d Flow definition file(s) for Apex class and field references.
 
+# log.formulaAnalysisComplete
+🔍 Scanned %d custom field file(s) for formula references.
+
 # log.layoutAnalysisComplete
 🔍 Scanned %d layout file(s) for field references.
 

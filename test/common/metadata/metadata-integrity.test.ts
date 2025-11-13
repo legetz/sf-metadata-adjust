@@ -392,6 +392,34 @@ describe("metadata-integrity", () => {
     });
   });
 
+  it("detects formula field references to removed custom fields", () => {
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Test__c.BirthYear__c",
+        referenceKey: "Test__c.BirthYear__c",
+        sourceFile: "force-app/main/default/objects/Test__c/fields/BirthYear__c.field-meta.xml"
+      }
+    ];
+
+    const index = buildRemovedMetadataIndex(removedItems);
+    const formula = "IF(BirthYear__c > 0, BirthYear__c, 0)";
+    const issues = findCustomFieldIssuesInContent(
+      formula,
+      "objects/Test__c/fields/Age__c.field-meta.xml",
+      index,
+      "Formula Field",
+      "Test__c"
+    );
+
+    expect(issues).to.have.lengthOf(1);
+    expect(issues[0]).to.include({
+      type: "MissingCustomFieldReference",
+      missingItem: "Test__c.BirthYear__c",
+      referencingFile: "objects/Test__c/fields/Age__c.field-meta.xml"
+    });
+  });
+
   it("ignores custom fields when layout object does not match", () => {
     const removedItems: RemovedMetadataItem[] = [
       {
