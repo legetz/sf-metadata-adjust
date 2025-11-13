@@ -287,8 +287,9 @@ sf swift metadata integrity --json
 |------|-------|-------------|---------|
 | `--target-dir` | `-d` | Directory to analyze when no positional path is given | `.` (current) |
 | `--git-depth` | `-g` | Number of commits to inspect for deletions (clamped to history) | `5` |
-| `--test-with` | - | Treat provided identifiers as removed metadata (repeatable). Use `Object.Field__c` for fields or class name for Apex. | Disabled |
-- Temporarily simulate deletions with `--test-with` to audit specific fields or classes without modifying Git history
+| `--test-with-class` | - | Treat provided Apex class names as removed metadata (repeatable). Useful when testing class-related rules without deleting code. | Disabled |
+| `--test-with-field` | - | Treat provided field API names (`Object.Field__c`) as removed metadata (repeatable). Useful for auditing field access without Git changes. | Disabled |
+- Temporarily simulate deletions with `--test-with-class` or `--test-with-field` to audit specific classes or fields without modifying Git history
 
 ### Output
 

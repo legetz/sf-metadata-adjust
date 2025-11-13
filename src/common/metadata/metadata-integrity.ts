@@ -406,13 +406,16 @@ function isLikelyFieldName(candidate: string): boolean {
   return /^[A-Za-z][A-Za-z0-9_]*$/.test(candidate);
 }
 
-export function createManualRemovedItem(identifier: string | undefined | null): RemovedMetadataItem | null {
+export function createManualRemovedItem(
+  identifier: string | undefined | null,
+  typeHint?: RemovedMetadataType
+): RemovedMetadataItem | null {
   const trimmed = identifier?.trim();
   if (!trimmed) {
     return null;
   }
 
-  if (trimmed.includes(".")) {
+  if (typeHint === "CustomField" || (typeHint === undefined && trimmed.includes("."))) {
     const [objectName, fieldName] = splitFieldReference(trimmed);
     if (!objectName || !fieldName) {
       return null;
@@ -431,16 +434,20 @@ export function createManualRemovedItem(identifier: string | undefined | null): 
     };
   }
 
-  if (!isLikelyApexClassName(trimmed)) {
-    return null;
+  if (typeHint === "ApexClass" || typeHint === undefined) {
+    if (!isLikelyApexClassName(trimmed)) {
+      return null;
+    }
+
+    return {
+      type: "ApexClass",
+      name: trimmed,
+      referenceKey: trimmed,
+      sourceFile: `manual:${trimmed}`
+    };
   }
 
-  return {
-    type: "ApexClass",
-    name: trimmed,
-    referenceKey: trimmed,
-    sourceFile: `manual:${trimmed}`
-  };
+  return null;
 }
 
 function equalsIgnoreCase(a: string, b: string): boolean {

@@ -10,8 +10,11 @@ Directory containing metadata to analyze. Defaults to current working directory.
 # flags.gitDepth.description
 Number of commits to inspect for deletions. Values greater than available history will be clamped.
 
-# flags.testWith.description
-Treat provided identifiers as manually removed metadata. Use `Object.Field__c` for fields or class name for Apex. Repeat flag to test multiple items.
+# flags.testWithClass.description
+Treat provided Apex class names as manually removed for integrity checks. Repeat flag to test multiple classes.
+
+# flags.testWithField.description
+Treat provided field API names (`Object.Field__c`) as manually removed for integrity checks. Repeat flag to test multiple fields.
 
 # examples
 - Analyze latest 5 commits in the current directory:
@@ -74,8 +77,11 @@ Treat provided identifiers as manually removed metadata. Use `Object.Field__c` f
 # warn.gitError
 ⚠️ Unable to analyze Git history: %s
 
-# warn.testWithInvalid
-⚠️ Ignoring --test-with value '%s'. Provide an Apex class name or Object.Field API name.
+# warn.testWithClassInvalid
+⚠️ Ignoring --test-with-class value '%s'. Provide a valid Apex class name (alphanumeric plus underscores).
+
+# warn.testWithFieldInvalid
+⚠️ Ignoring --test-with-field value '%s'. Provide a field API name in the form `Object.Field`.
 
 # error.issuesFound
 Detected %d metadata integrity issue(s). See above for details.

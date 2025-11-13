@@ -44,7 +44,7 @@ describe("metadata-integrity", () => {
   });
 
   it("creates manual Apex class removed items", () => {
-    const result = createManualRemovedItem("LegacyService");
+    const result = createManualRemovedItem("LegacyService", "ApexClass");
     expect(result).to.deep.equal({
       type: "ApexClass",
       name: "LegacyService",
@@ -54,7 +54,7 @@ describe("metadata-integrity", () => {
   });
 
   it("creates manual custom field removed items", () => {
-    const result = createManualRemovedItem("Account.Legacy__c");
+    const result = createManualRemovedItem("Account.Legacy__c", "CustomField");
     expect(result).to.deep.equal({
       type: "CustomField",
       name: "Account.Legacy__c",
@@ -64,9 +64,9 @@ describe("metadata-integrity", () => {
   });
 
   it("returns null for invalid manual identifiers", () => {
-    expect(createManualRemovedItem("")).to.equal(null);
-    expect(createManualRemovedItem("Account.")).to.equal(null);
-    expect(createManualRemovedItem("123Invalid")).to.equal(null);
+    expect(createManualRemovedItem("", "ApexClass")).to.equal(null);
+    expect(createManualRemovedItem("Account.", "CustomField")).to.equal(null);
+    expect(createManualRemovedItem("123Invalid", "ApexClass")).to.equal(null);
   });
 
   it("ignores unrelated file paths", () => {

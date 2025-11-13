@@ -54,8 +54,12 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
       description: messages.getMessage("flags.gitDepth.description"),
       default: 5
     }),
-    "test-with": Flags.string({
-      description: messages.getMessage("flags.testWith.description"),
+    "test-with-class": Flags.string({
+      description: messages.getMessage("flags.testWithClass.description"),
+      multiple: true
+    }),
+    "test-with-field": Flags.string({
+      description: messages.getMessage("flags.testWithField.description"),
       multiple: true
     })
   };
@@ -69,25 +73,29 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
     const gitDepth = flags["git-depth"] ?? 5;
 
     const { removedItems, actualDepth } = this.getRemovedMetadataItems(targetDir, gitDepth);
-    const manualIdentifiersRaw = flags["test-with"];
-    const manualIdentifiers = Array.isArray(manualIdentifiersRaw)
-      ? manualIdentifiersRaw
-      : manualIdentifiersRaw
-        ? [manualIdentifiersRaw]
-        : [];
+    const manualClasses = this.normalizeStringArray(flags["test-with-class"]);
+    const manualFields = this.normalizeStringArray(flags["test-with-field"]);
 
-    for (const identifier of manualIdentifiers) {
-      const manualItem = createManualRemovedItem(identifier);
+    for (const identifier of manualClasses) {
+      const manualItem = createManualRemovedItem(identifier, "ApexClass");
       if (!manualItem) {
-        this.warn(messages.getMessage("warn.testWithInvalid", [identifier]));
+        this.warn(messages.getMessage("warn.testWithClassInvalid", [identifier]));
         continue;
       }
 
-      const alreadyTracked = removedItems.some(
-        (item) => item.type === manualItem.type && item.referenceKey === manualItem.referenceKey
-      );
+      if (!this.manualItemAlreadyTracked(removedItems, manualItem)) {
+        removedItems.push(manualItem);
+      }
+    }
 
-      if (!alreadyTracked) {
+    for (const identifier of manualFields) {
+      const manualItem = createManualRemovedItem(identifier, "CustomField");
+      if (!manualItem) {
+        this.warn(messages.getMessage("warn.testWithFieldInvalid", [identifier]));
+        continue;
+      }
+
+      if (!this.manualItemAlreadyTracked(removedItems, manualItem)) {
         removedItems.push(manualItem);
       }
     }
@@ -457,5 +465,22 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
     }
 
     return Array.from(objects);
+  }
+
+  private normalizeStringArray(input: string | string[] | undefined): string[] {
+    if (!input) {
+      return [];
+    }
+
+    const values = Array.isArray(input) ? input : [input];
+    return values
+      .map((value) => value?.trim())
+      .filter((value): value is string => Boolean(value && value.length > 0));
+  }
+
+  private manualItemAlreadyTracked(removedItems: RemovedMetadataItem[], candidate: RemovedMetadataItem): boolean {
+    return removedItems.some(
+      (item) => item.type === candidate.type && item.referenceKey === candidate.referenceKey
+    );
   }
 }
