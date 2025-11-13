@@ -184,9 +184,12 @@ export function findIntegrityIssuesInSource(
 
   const content = rawContent ?? "";
 
-  for (const className of classIndex.keys()) {
+  for (const [className, item] of classIndex.entries()) {
     const pattern = buildClassReferencePattern(className);
     if (pattern.test(content)) {
+      if (isManualRemovedItem(item) && isLikelyApexClassDefinition(filePath, content, className)) {
+        continue;
+      }
       issues.push({
         type: "DanglingApexClassReference",
         missingItem: className,
@@ -404,6 +407,23 @@ function isLikelyApexClassName(candidate: string): boolean {
 
 function isLikelyFieldName(candidate: string): boolean {
   return /^[A-Za-z][A-Za-z0-9_]*$/.test(candidate);
+}
+
+function isManualRemovedItem(item: RemovedMetadataItem): boolean {
+  return item.sourceFile.startsWith("manual:");
+}
+
+function isLikelyApexClassDefinition(filePath: string, content: string, className: string): boolean {
+  const normalizedPath = filePath.split(path.sep).join("/").toLowerCase();
+  const normalizedName = className.toLowerCase();
+  if (normalizedPath.endsWith(`/classes/${normalizedName}.cls`) || normalizedPath.endsWith(`${normalizedName}.cls`)) {
+    return true;
+  }
+
+  const classPattern = new RegExp(`\bclass\s+${escapeRegExp(className)}\b`, "i");
+  const interfacePattern = new RegExp(`\binterface\s+${escapeRegExp(className)}\b`, "i");
+  const enumPattern = new RegExp(`\benum\s+${escapeRegExp(className)}\b`, "i");
+  return classPattern.test(content) || interfacePattern.test(content) || enumPattern.test(content);
 }
 
 export function createManualRemovedItem(

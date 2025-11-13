@@ -222,6 +222,19 @@ describe("metadata-integrity", () => {
     });
   });
 
+  it("ignores manual Apex class definitions when simulating removal", () => {
+    const manualItem = createManualRemovedItem("LegacyService", "ApexClass");
+    if (!manualItem) {
+      throw new Error("Failed to create manual removed item");
+    }
+
+    const index = buildRemovedMetadataIndex([manualItem]);
+    const content = "public with sharing class LegacyService { void exec() {} }";
+    const issues = findIntegrityIssuesInSource(content, "force-app/main/default/classes/LegacyService.cls", index);
+
+    expect(issues).to.have.lengthOf(0);
+  });
+
   it("detects Apex class references in LWC imports", () => {
     const removedItems: RemovedMetadataItem[] = [
       {
