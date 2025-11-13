@@ -473,14 +473,10 @@ export default class MetadataIntegrity extends SfCommand<MetadataIntegrityResult
     }
 
     const values = Array.isArray(input) ? input : [input];
-    return values
-      .map((value) => value?.trim())
-      .filter((value): value is string => Boolean(value && value.length > 0));
+    return values.map((value) => value?.trim()).filter((value): value is string => Boolean(value && value.length > 0));
   }
 
   private manualItemAlreadyTracked(removedItems: RemovedMetadataItem[], candidate: RemovedMetadataItem): boolean {
-    return removedItems.some(
-      (item) => item.type === candidate.type && item.referenceKey === candidate.referenceKey
-    );
+    return removedItems.some((item) => item.type === candidate.type && item.referenceKey === candidate.referenceKey);
   }
 }

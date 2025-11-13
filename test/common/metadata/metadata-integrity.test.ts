@@ -380,16 +380,16 @@ describe("metadata-integrity", () => {
   });
 
   it("ignores custom fields when layout object does not match", () => {
-      const removedItems: RemovedMetadataItem[] = [
-        {
-          type: "CustomField",
-          name: "Asset.Legacy__c",
-          referenceKey: "Asset.Legacy__c",
-          sourceFile: "force-app/main/default/objects/Asset/fields/Legacy__c.field-meta.xml"
-        }
-      ];
-      const index = buildRemovedMetadataIndex(removedItems);
-      const content = `<?xml version="1.0" encoding="UTF-8"?>
+    const removedItems: RemovedMetadataItem[] = [
+      {
+        type: "CustomField",
+        name: "Asset.Legacy__c",
+        referenceKey: "Asset.Legacy__c",
+        sourceFile: "force-app/main/default/objects/Asset/fields/Legacy__c.field-meta.xml"
+      }
+    ];
+    const index = buildRemovedMetadataIndex(removedItems);
+    const content = `<?xml version="1.0" encoding="UTF-8"?>
           <Layout xmlns="http://soap.sforce.com/2006/04/metadata">
               <layoutSections>
                   <layoutColumns>
@@ -400,15 +400,15 @@ describe("metadata-integrity", () => {
               </layoutSections>
           </Layout>`;
 
-      const issues = findCustomFieldIssuesInContent(
-        content,
-        "layouts/Account-Account_Layout.layout-meta.xml",
-        index,
-        "Layout",
-        "Account"
-      );
-      expect(issues).to.have.lengthOf(0);
-    });
+    const issues = findCustomFieldIssuesInContent(
+      content,
+      "layouts/Account-Account_Layout.layout-meta.xml",
+      index,
+      "Layout",
+      "Account"
+    );
+    expect(issues).to.have.lengthOf(0);
+  });
 
   it("detects field set references to removed custom fields", () => {
     const removedItems: RemovedMetadataItem[] = [
