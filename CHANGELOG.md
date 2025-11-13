@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- _No changes yet._
+
+## [1.0.13] - 2025-11-13
+
 ### Added
 - 🧭 **Metadata Integrity Command**: Added `sf swift metadata integrity` to flag lingering profile and permission set references to deleted Apex classes or custom fields.
 - 🧩 **Metadata Integrity Helper**: Shared analyzer for detecting class and field permission issues with coverage tests.
@@ -18,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🔍 **Integrity Coverage**: The metadata integrity scan now inspects Apex source, Visualforce pages, LWC/Aura components, Flow definitions, formula fields, layouts, validation rules, field sets, record types, and compact layouts for lingering references to deleted Apex classes, Visualforce pages, and custom fields.
 - ♻️ **Flexipage Scanning**: Removed Flexipage coverage from metadata integrity checks because Lightning pages do not expose a reliable object context.
 - 🎯 **Integrity Precision**: Object-aware scanning now reduces false positives across flows, layouts, field sets, record types, compact layouts, and validation rules by matching references to their owning objects.
+
+### Fixed
+- 🧷 **Case-Insensitive Flow Detection**: Flow audits now match field references regardless of casing, catching `account.externalid__c` alongside canonical `Account.ExternalId__c` values.
 
 ## [1.0.12] - 2025-11-11
 
@@ -96,9 +103,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 - **Command**: `sf swift metadata adjust` - Main command for sorting metadata files
 
+[Unreleased]: https://github.com/legetz/sf-swift/compare/v1.0.13...HEAD
+[1.0.13]: https://github.com/legetz/sf-swift/releases/tag/v1.0.13
 [1.0.12]: https://github.com/legetz/sf-swift/releases/tag/v1.0.12
 [1.0.11]: https://github.com/legetz/sf-swift/releases/tag/v1.0.11
-[Unreleased]: https://github.com/legetz/sf-swift/compare/v1.0.10...HEAD
 [1.0.10]: https://github.com/legetz/sf-swift/releases/tag/v1.0.10
 [1.0.5]: https://github.com/legetz/sf-swift/releases/tag/v1.0.5
 [1.0.4]: https://github.com/legetz/sf-swift/releases/tag/v1.0.4
