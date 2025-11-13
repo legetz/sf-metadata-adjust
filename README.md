@@ -18,8 +18,8 @@ A fast and powerful Salesforce CLI plugin with utilities for metadata formatting
 ## Commands
 
 - [`sf swift metadata adjust`](#command-sf-swift-metadata-adjust)
-- [`sf swift detect git conflicts`](#command-sf-swift-detect-git-conflicts)
 - [`sf swift metadata integrity`](#command-sf-swift-metadata-integrity)
+- [`sf swift detect git conflicts`](#command-sf-swift-detect-git-conflicts)
 
 ## Installation
 
@@ -267,6 +267,8 @@ Default output is human-readable and includes a summary plus any `.rej` file pat
 ## Command: `sf swift metadata integrity`
 
 Cross-checks recent Git history for deleted metadata (Apex classes, Visualforce pages, custom fields) and reports lingering references across Profiles, Permission Sets, source code, flows, formulas, layouts, and more.
+
+➡️ For a detailed coverage matrix, CLI tips, and CI examples see [METADATA-INTEGRITY.md](./METADATA-INTEGRITY.md).
 
 ### Quick start
 

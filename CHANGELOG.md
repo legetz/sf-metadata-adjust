@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🧩 **Metadata Integrity Helper**: Shared analyzer for detecting class and field permission issues with coverage tests.
 - 🧮 **Integrity Ruleset**: Centralized metadata integrity rules covering Visualforce pages, flows, layouts, validation rules, field sets, record types, and compact layouts.
 - 🧪 **Manual Integrity Simulation**: Added `--test-with-class` and `--test-with-field` flags to emulate deleted Apex classes or custom fields during integrity scans.
+- 📘 **Metadata Integrity Guide**: Comprehensive documentation in `METADATA-INTEGRITY.md`, linked from the README.
 
 ### Changed
 - 🔍 **Integrity Coverage**: The metadata integrity scan now inspects Apex source, Visualforce pages, LWC/Aura components, Flow definitions, formula fields, layouts, validation rules, field sets, record types, and compact layouts for lingering references to deleted Apex classes, Visualforce pages, and custom fields.
