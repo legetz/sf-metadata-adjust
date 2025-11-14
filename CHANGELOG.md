@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🔍 **Integrity Coverage**: The metadata integrity scan now inspects Apex source, Visualforce pages, LWC/Aura components, Flow definitions, formula fields, layouts, validation rules, field sets, record types, and compact layouts for lingering references to deleted Apex classes, Visualforce pages, and custom fields.
 - ♻️ **Flexipage Scanning**: Removed Flexipage coverage from metadata integrity checks because Lightning pages do not expose a reliable object context.
 - 🎯 **Integrity Precision**: Object-aware scanning now reduces false positives across flows, layouts, field sets, record types, compact layouts, and validation rules by matching references to their owning objects.
+- 🕵️ **PR Integrity Checks**: CI now runs `sf swift metadata integrity` during pull requests and blocks automated formatting when issues are detected.
 
 ### Fixed
 - 🧷 **Case-Insensitive Flow Detection**: Flow audits now match field references regardless of casing, catching `account.externalid__c` alongside canonical `Account.ExternalId__c` values.

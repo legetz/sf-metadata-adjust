@@ -86,10 +86,112 @@ jobs:
         if: ${{ steps.detect.outputs.rej_count != '0' }}
         run: exit 1
 
-  adjust-code:
-    needs: check-rej-files
+  check-integrity:
     runs-on: ubuntu-latest
-    if: ${{ needs.check-rej-files.result == 'success' }}
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install SF Swift plugin
+        run: |
+          npm install -g @salesforce/cli
+          echo "y" | sf plugins install sf-swift
+
+      - name: Calculate PR commit count
+        id: calc-depth
+        run: |
+          PR_COMMITS=$(git rev-list --count origin/${{ github.base_ref }}..HEAD)
+          echo "git_depth=${PR_COMMITS}" >> $GITHUB_OUTPUT
+          echo "📊 PR has ${PR_COMMITS} commits"
+
+      - name: Run metadata integrity check
+        id: integrity
+        continue-on-error: true
+        run: |
+          GIT_DEPTH=${{ steps.calc-depth.outputs.git_depth }}
+
+          set +e
+          OUTPUT=$(sf swift metadata integrity --git-depth ${GIT_DEPTH:-5} --json)
+          COMMAND_STATUS=$?
+          set -e
+
+          echo "$OUTPUT" | tee integrity-output.json
+
+          STATUS=0
+          ISSUE_COUNT=0
+          ISSUE_DETAILS=""
+
+          if [ -s integrity-output.json ]; then
+            if jq -e '.status' integrity-output.json >/dev/null 2>&1; then
+              STATUS=$(jq -r 'if (.status | type == "number") then .status else 1 end' integrity-output.json)
+              ISSUE_COUNT=$(jq -r '.result.issues | length // 0' integrity-output.json)
+              ISSUE_DETAILS=$(jq -r '.result.issues[]? | "- " + (.detail // "Unknown issue") + " → " + (.referencingFile // "Unknown file")' integrity-output.json)
+            else
+              STATUS=${COMMAND_STATUS:-1}
+              ISSUE_DETAILS="Failed to parse metadata integrity output."
+            fi
+          else
+            STATUS=${COMMAND_STATUS:-1}
+            ISSUE_DETAILS="Metadata integrity command produced no output."
+          fi
+
+          echo "status=${STATUS}" >> $GITHUB_OUTPUT
+          echo "issue_count=${ISSUE_COUNT}" >> $GITHUB_OUTPUT
+          printf 'issue_details<<EOF\n%s\nEOF\n' "$ISSUE_DETAILS" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        if: ${{ steps.integrity.outputs.issue_count != '0' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueCount = Number('${{ steps.integrity.outputs.issue_count }}');
+            const gitDepth = '${{ steps.calc-depth.outputs.git_depth }}';
+            const details = `${{ steps.integrity.outputs.issue_details }}`.trim();
+            const issuesSection = details ? `**Issues:**\n\n${details}` : '';
+            const bodySections = [
+              '❌ **Metadata integrity issues detected**',
+              `Scan inspected the last ${gitDepth || 'N/A'} commit(s).`,
+              `Found ${issueCount} metadata integrity issue${issueCount === 1 ? '' : 's'}.`,
+              issuesSection,
+              '⚡ Powered by [sf-swift plugin](https://www.npmjs.com/package/sf-swift)'
+            ].filter(Boolean);
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: bodySections.join('\n\n')
+            });
+
+      - name: Fail when integrity issues detected
+        if: ${{ steps.integrity.outputs.issue_count != '0' }}
+        run: exit 1
+
+      - name: Fail when integrity command fails
+        if: ${{ steps.integrity.outputs.status != '0' && steps.integrity.outputs.issue_count == '0' }}
+        run: |
+          echo "Metadata integrity command failed. See previous logs for details." >&2
+          exit 1
+
+  adjust-code:
+    needs: [check-rej-files, check-integrity]
+    runs-on: ubuntu-latest
+    if: ${{ needs.check-rej-files.result == 'success' && needs.check-integrity.result == 'success' }}
 
     permissions:
       contents: write
